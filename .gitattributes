@@ -1,0 +1,9 @@
+/src/** text eol=lf
+/tools/** text eol=lf
+/test/** text eol=lf
+/docs/** text eol=lf
+/assets/icons/** text eol=lf
+/assets/games.json text eol=lf
+/README.md text eol=lf
+/package*.json text eol=lf
+/.gitignore text eol=lf

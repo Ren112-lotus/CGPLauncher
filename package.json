@@ -1,0 +1,37 @@
+{
+  "name": "cgp-launcher-rebuilt",
+  "productName": "CGP Launcher Rebuilt",
+  "version": "1.0.3",
+  "private": true,
+  "description": "CGPのゲームライブラリとWindowsゲームランチャー",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "build": "node tools/package.cjs",
+    "css:build": "tailwindcss -i ./src/tailwind.css -o ./src/style.css --minify",
+    "css:watch": "tailwindcss -i ./src/tailwind.css -o ./src/style.css --watch",
+    "prestart": "npm run icons:build && npm run css:build",
+    "prebuild": "npm run icons:build && npm run css:build",
+    "icons:build": "node tools/icons.cjs"
+  },
+  "dependencies": {
+    "adm-zip": "0.6.1",
+    "dompurify": "3.4.17",
+    "marked": "18.1.2"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "@tailwindcss/cli": "4.3.3",
+    "electron": "45.2.1",
+    "lucide-static": "1.66.0",
+    "tailwindcss": "4.3.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ren112-lotus/CGPLauncher.git"
+  }
+}
