@@ -6,9 +6,22 @@
 ## ダウンロード・起動
 
 [最新版のリリース](https://github.com/Ren112-lotus/CGPLauncher/releases/latest) から
-`CGP-Launcher-Rebuilt-1.0.3-win32-x64.zip` をダウンロードして展開し、
-フォルダ内の `CGP Launcher Rebuilt.exe` を起動してください。
-同じフォルダのDLLやresourcesも必要です。ランチャー本体にPythonは不要です。
+`CGP-Launcher-Rebuilt-Setup-1.1.0-x64.exe` をダウンロードしてインストールしてください。
+ランチャー本体にPythonは不要です。
+
+v1.0.3以前のZIP版には更新機能がないため、最初の一度だけセットアップ版を
+インストールしてください。設定・お気に入り・ダウンロード済みゲームの登録は
+同じデータフォルダを使って引き継ぎます。
+
+## 自動アップデート
+
+- 起動から10秒後、その後は6時間ごとにGitHub Releasesの正式版を確認します。
+- 新しい版をバックグラウンドでダウンロードし、SHA-512でファイルを検証します。
+- 準備ができると「再起動して更新」を表示します。押すと更新を適用して再起動します。
+- 実行中のゲーム・ゲームのダウンロード・Unity Roomを終了してから適用します。
+- 通常の終了やWindowsのシャットダウン時には更新を適用しません。
+- 設定の「ランチャーの更新」で手動確認や自動確認のオン・オフができます。
+- 通信に失敗した場合は設定から再試行できます。開発版では更新を実行しません。
 
 ## ソースから起動
 
@@ -45,6 +58,7 @@ npm run css:build  # CSSを一度生成
 npm run icons:build # Lucideから使用アイコンを生成
 npm test          # コア機能のテスト
 npm run build     # アイコン・CSS生成 → Windows x64版を作成
+npm run verify:release # インストーラー・更新ファイル・チェックサムを検証
 ```
 
 `src/style.css` は生成物です。直接編集せず、HTML・JavaScript・`tailwind.css` を修正してください。
@@ -73,7 +87,7 @@ CSSはアプリに同梱され、実行時のCDNやTailwindランタイムは不
 設定やゲームの標準保存先は `%APPDATA%/CGP Launcher Rebuilt` です。
 旧ランチャーから検出したゲームは元の場所を参照します。旧アプリのGamesフォルダを
 移動・削除すると、引き継いだゲームは起動できなくなります。
-更新は新しいフォルダへ展開し、旧バージョンのファイルは自動削除しません。
+GitHub配布ゲームの更新は新しいフォルダへ展開し、旧バージョンのゲームファイルは自動削除しません。
 
 GitHubの公開APIはアクセス回数制限があります。READMEとリリース情報をキャッシュします。
 Webゲームの動作・広告・通信先は配布元に依存します。WebViewで動かない場合は
@@ -102,3 +116,20 @@ python games_editor.py
 `assets/games.json` にコピーしてからWindows版を生成します。
 出力先はリポジトリの隣の `CGP-Launcher-Windows/<バージョン>/` です。
 既存のゲームリスト・バックアップ・旧リリースは引き継いでいます。
+
+## 更新版の配布
+
+`package.json` のバージョンを上げ、`npm test` と `npm run build` を実行します。
+ビルドはインストーラーに加え、差分配信用の `.exe.blockmap` と更新情報の
+`latest.yml` を生成し、バージョン・SHA-512・配布先設定を検証します。
+
+ソースをコミット・pushした後、同じコミットを指す `v<バージョン>` のGitHub Releaseに
+次の3ファイルを添付して正式版として公開してください。
+
+- `CGP-Launcher-Rebuilt-Setup-<バージョン>-x64.exe`
+- `CGP-Launcher-Rebuilt-Setup-<バージョン>-x64.exe.blockmap`
+- `latest.yml`
+
+`latest.yml` とインストーラーは必ず同じビルドのものを公開します。
+更新先は `Ren112-lotus/CGPLauncher` に固定され、ゲームリストURLの設定とは独立しています。
+`win-unpacked` はビルド確認用です。利用者にはセットアップ版を配布してください。

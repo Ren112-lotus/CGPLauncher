@@ -5,7 +5,7 @@ const { spawn } = require('node:child_process');
 const AdmZip = require('adm-zip');
 
 const DEFAULT_URL = 'https://raw.githubusercontent.com/Ren112-lotus/CGPLauncher/refs/heads/main/games.json';
-const defaults = () => ({catalogUrl: DEFAULT_URL, autoSync: true, downloadDir: '', theme: 'dark', view: 'list', favorites: [], installed: {}, history: {}});
+const defaults = () => ({catalogUrl: DEFAULT_URL, autoSync: true, autoUpdate: true, downloadDir: '', theme: 'dark', view: 'list', favorites: [], installed: {}, history: {}});
 const exists = async p => !!(await fs.stat(p).catch(() => null));
 const hash = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 function httpsUrl(value) {
@@ -133,13 +133,14 @@ class LauncherService {
   emit() {this.onChange(this.snapshot());}
   game(id) {const g=this.games.find(g=>g.id===id); if (!g) throw Error('ゲームが見つかりません。'); return g;}
   async updateSettings(patch) {
-    const allowed = ['catalogUrl','autoSync','downloadDir','theme','view'];
+    const allowed = ['catalogUrl','autoSync','autoUpdate','downloadDir','theme','view'];
     for (const key of Object.keys(patch)) if (!allowed.includes(key)) throw Error('不明な設定です。');
     if (patch.catalogUrl !== undefined) httpsUrl(patch.catalogUrl);
     if (patch.theme && !['dark','light','system'].includes(patch.theme)) throw Error('不明なテーマです。');
     if (patch.view && !['grid','list'].includes(patch.view)) throw Error('不明な表示形式です。');
     if (patch.downloadDir && !path.isAbsolute(patch.downloadDir)) throw Error('保存先は絶対パスで指定してください。');
     if (patch.autoSync !== undefined && typeof patch.autoSync !== 'boolean') throw Error('自動同期の値が正しくありません。');
+    if (patch.autoUpdate !== undefined && typeof patch.autoUpdate !== 'boolean') throw Error('自動アップデートの値が正しくありません。');
     Object.assign(this.settings,patch); await this.save(); this.emit(); return this.snapshot();
   }
   async sync() {

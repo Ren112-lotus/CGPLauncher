@@ -14,6 +14,48 @@ const systemTheme = await api.systemTheme();
 const game = id => state.games.find(g => g.id === id);
 const webModal = $('#web-modal');
 let sidebarCollapsed = false;
+let appUpdate = null;
+
+function updateBusyReason() {
+  if (Object.keys(state?.jobs || {}).length) return 'ゲームのダウンロードが完了すると更新できます。';
+  if (state?.running?.length) return '実行中のゲームを終了すると更新できます。';
+  if (webId) return 'Unity Roomを閉じると更新できます。';
+  return '';
+}
+function renderAppUpdate() {
+  if (!appUpdate) return;
+  const {status, version, percent, error, currentVersion, lastChecked} = appUpdate;
+  const busy = updateBusyReason();
+  const messages = {
+    idle: lastChecked ? '最新版を利用しています。' : '更新を確認できます。',
+    checking: '新しいバージョンを確認しています…',
+    downloading: `v${version} をダウンロード中… ${Math.floor(percent)}%`,
+    downloaded: `v${version} の更新準備ができました。`,
+    installing: '更新を適用するため、ランチャーを再起動しています…',
+    error,
+    unsupported: 'この起動方法では自動更新できません。セットアップ版で利用できます。'
+  };
+  $('#app-version').textContent = `現在のバージョン: ${currentVersion}`;
+  $('#update-status').textContent = [messages[status], status === 'downloaded' ? (error || busy) : ''].filter(Boolean).join(' ');
+  $('#update-check').disabled = ['checking','downloading','downloaded','installing','unsupported'].includes(status);
+  $('#update-check').textContent = status === 'error' ? '再試行' : '更新を確認';
+  for (const id of ['#update-progress','#update-banner-progress']) {
+    $(id).hidden = status !== 'downloading';
+    $(id).value = percent;
+  }
+  for (const id of ['#update-install-settings','#update-install-banner']) {
+    $(id).hidden = status !== 'downloaded' && status !== 'installing';
+    $(id).disabled = !!busy || status === 'installing';
+    $(id).title = busy;
+  }
+  const showBanner = ['downloading','downloaded','installing'].includes(status) || status === 'error' && !!version;
+  $('#update-banner').hidden = !showBanner;
+  $('#update-banner-title').textContent = messages[status] || '';
+  $('#update-banner-hint').textContent = status === 'downloaded' ? (busy || '「再起動して更新」で適用できます。') : status === 'downloading' ? 'ダウンロード中もゲームを利用できます。' : status === 'error' ? '再試行するか、あとで設定から確認できます。' : '';
+  $('#update-retry').hidden = status !== 'error';
+  $('#toasts').classList.toggle('bottom-6', !showBanner);
+  $('#toasts').classList.toggle('bottom-52', showBanner);
+}
 
 function setSidebarCollapsed(collapsed) {
   sidebarCollapsed = collapsed;
@@ -169,6 +211,7 @@ function render() {
   $('#filter-summary').hidden = !summary;
   $('#filter-label').textContent = summary;
   if (list && selected && game(selected)?.githuburl && !loadedDetails.has(selected)) loadDetails(selected);
+  renderAppUpdate();
 }
 async function loadDetails(id, force = false) {
   if (loadingDetails.has(id)) return;
@@ -231,6 +274,7 @@ async function updateBounds() { if (webId && webModal.open) await api.webBounds(
 async function openWeb(id) {
   if (webId) await closeWeb();
   webId = id;
+  renderAppUpdate();
   $('#web-title').textContent = game(id).name + ' - Unity Room';
   $('#web-error').hidden = true;
   $('#web-back').hidden = true; $('#web-forward').hidden = true;
@@ -238,7 +282,7 @@ async function openWeb(id) {
   try { await api.webOpen(id, webBounds()); await updateBounds(); }
   catch (error) { webId = null; webModal.close(); throw error; }
 }
-async function closeWeb() { await api.webControl('close'); webId = null; if (webModal.open) webModal.close(); }
+async function closeWeb() { await api.webControl('close'); webId = null; if (webModal.open) webModal.close(); renderAppUpdate(); }
 new ResizeObserver(() => { if (webId) updateBounds(); }).observe($('#web-host'));
 window.addEventListener('resize', () => { if (webId) updateBounds(); });
 webModal.addEventListener('cancel', event => { event.preventDefault(); safe(closeWeb)(); });
@@ -301,6 +345,8 @@ $('#settings').onclick = () => {
   const s = state.settings;
   $('#catalog-url').value = s.catalogUrl; $('#auto-sync').checked = s.autoSync;
   $('#download-dir').value = s.downloadDir; $('#theme').value = s.theme; $('#settings-error').textContent = '';
+  $('#auto-update').checked = s.autoUpdate;
+  renderAppUpdate();
   settingsDialog.showModal();
 };
 $$('.close-dialog').forEach(el => el.onclick = () => settingsDialog.close());
@@ -309,12 +355,13 @@ $('#default-folder').onclick = () => $('#download-dir').value = '';
 $('#reset-settings').onclick = () => {
   $('#catalog-url').value = 'https://raw.githubusercontent.com/Ren112-lotus/CGPLauncher/refs/heads/main/games.json';
   $('#auto-sync').checked = true; $('#download-dir').value = ''; $('#theme').value = 'dark';
+  $('#auto-update').checked = true;
 };
 $('#import-legacy').onclick = safe(async () => toast(`${await api.importLegacy()} 件のゲームを追加しました。`));
 $('#settings-form').onsubmit = async event => {
   event.preventDefault();
   try {
-    await api.settings({catalogUrl:$('#catalog-url').value.trim(),autoSync:$('#auto-sync').checked,downloadDir:$('#download-dir').value,theme:$('#theme').value});
+    await api.settings({catalogUrl:$('#catalog-url').value.trim(),autoSync:$('#auto-sync').checked,autoUpdate:$('#auto-update').checked,downloadDir:$('#download-dir').value,theme:$('#theme').value});
     settingsDialog.close(); toast('設定を保存しました。');
   } catch (error) { $('#settings-error').textContent = error.message; }
 };
@@ -325,4 +372,11 @@ document.addEventListener('keydown', safe(async event => {
 }));
 api.onState(s => { state = s; render(); });
 state = await api.snapshot(); render();
+api.onAppUpdate(update => { appUpdate = update; renderAppUpdate(); });
+appUpdate = await api.updateState(); renderAppUpdate();
+$('#update-check').onclick = safe(async () => { appUpdate = await api.updateCheck(); renderAppUpdate(); });
+$('#update-retry').onclick = $('#update-check').onclick;
+const applyUpdate = safe(async () => { await api.updateInstall(); });
+$('#update-install-settings').onclick = applyUpdate;
+$('#update-install-banner').onclick = applyUpdate;
 if (state.settings.autoSync) sync(true);

@@ -1,7 +1,7 @@
 const fs=require('node:fs/promises');
 const path=require('node:path');
 async function run(){
-  const {packager}=await import('@electron/packager');
+  const {build}=require('electron-builder');
   const root=path.join(__dirname,'..');
   const {version}=require('../package.json');
   const output=path.join(root,'..','CGP-Launcher-Windows',version);
@@ -12,7 +12,8 @@ async function run(){
     await fs.writeFile(path.join(root,'assets','games.json'),(await fs.readFile(catalog,'utf8')).replace(/\r\n/g,'\n').trimEnd()+'\n','utf8');
   }
   await fs.mkdir(output,{recursive:true});
-  const result=await packager({dir:root,out:output,name:'CGP Launcher Rebuilt',platform:'win32',arch:'x64',icon:path.join(root,'assets/logo.ico'),overwrite:true,asar:true,prune:true,ignore:[/^\/test(?:\/|$)/,/^\/tools(?:\/|$)/,/^\/\.git(?:\/|$)/],win32metadata:{CompanyName:'CGP',FileDescription:'CGP Launcher Rebuilt',ProductName:'CGP Launcher Rebuilt'}});
+  const result=await build({projectDir:root,config:path.join(root,'electron-builder.json'),win:['nsis'],x64:true,publish:'never'});
+  await require('./verify-release.cjs').verifyRelease(output);
   console.log(result.join('\n'));
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});

@@ -2,7 +2,11 @@ const {app,BrowserWindow,WebContentsView,ipcMain,dialog,shell,nativeTheme} = req
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const {LauncherService}=require('./core.cjs');
-let window,service,gameView,webGameId;
+const {LauncherUpdater}=require('./updater.cjs');
+const {autoUpdater}=require('electron-updater');
+const {existsSync}=require('node:fs');
+let window,service,gameView,webGameId,launcherUpdater;
+let pendingGameActions=0;
 const localPage=pathToFileURL(path.join(__dirname,'index.html')).href;
 if(process.env.CGP_TEST_DATA) app.setPath('userData',process.env.CGP_TEST_DATA);
 else app.setPath('userData',path.join(app.getPath('appData'),'CGP Launcher Rebuilt'));
@@ -10,8 +14,17 @@ const acquired=app.requestSingleInstanceLock();
 if(!acquired) app.quit();
 app.on('second-instance',()=>{if(window){if(window.isMinimized())window.restore();window.show();window.focus();}});
 app.whenReady().then(async()=>{
+  app.setAppUserModelId('com.cgpstudios.launcher.rebuilt');
   service=new LauncherService({dataDir:app.getPath('userData'),bundledCatalog:path.join(__dirname,'../assets/games.json'),legacyResources:path.join(app.getPath('home'),'AppData/Local/Programs/CGP Modern Launcher/CGP Launcher/resources'),onChange:s=>window&&!window.isDestroyed()&&window.webContents.send('state',s)});
   await service.init();
+  launcherUpdater=new LauncherUpdater({
+    updater:autoUpdater,version:app.getVersion(),
+    supported:process.platform==='win32' && app.isPackaged && existsSync(path.join(process.resourcesPath,'app-update.yml')),
+    enabled:()=>service.settings.autoUpdate,
+    busyReason:()=>service.jobs.size?'ゲームのダウンロードが完了してから更新してください。':service.running.size?'実行中のゲームを終了してから更新してください。':webGameId?'Unity Roomを閉じてから更新してください。':pendingGameActions?'ゲームの起動・ダウンロード準備が完了してから更新してください。':'',
+    prepareInstall:()=>service.save(),
+    onChange:state=>window&&!window.isDestroyed()&&window.webContents.send('app-update',state)
+  });
   window=new BrowserWindow({width:1400,height:900,minWidth:1000,minHeight:700,frame:false,show:false,title:'CGP Launcher Rebuilt',backgroundColor:'#0f172a',icon:path.join(__dirname,'../assets/logo.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   window.webContents.on('will-navigate',(event,url)=>{if(url!==localPage)event.preventDefault();});
@@ -25,9 +38,11 @@ app.whenReady().then(async()=>{
   handle('settings',p=>service.updateSettings(p));
   handle('favorite',id=>service.favorite(id));
   handle('details',(id,force)=>service.details(id,force));
-  handle('install',(id,asset)=>service.install(id,asset));
+  const requireNotUpdating=()=>{if(launcherUpdater.isInstalling)throw Error('ランチャーの更新を適用中です。');};
+  const gameAction=async action=>{requireNotUpdating();pendingGameActions++;try{return await action();}finally{pendingGameActions--;}};
+  handle('install',(id,asset)=>gameAction(()=>service.install(id,asset)));
   handle('cancel',id=>service.cancel(id));
-  handle('launch',id=>service.launch(id));
+  handle('launch',id=>gameAction(()=>service.launch(id)));
   handle('select-exe',(id,exe)=>service.selectExe(id,exe));
   handle('import-legacy',async()=>{const n=await service.importLegacy();service.emit();return n;});
   handle('folder',async()=>{const r=await dialog.showOpenDialog(window,{title:'ゲームの保存先',properties:['openDirectory','createDirectory']});return r.canceled?null:r.filePaths[0];});
@@ -35,6 +50,9 @@ app.whenReady().then(async()=>{
   handle('external',async url=>{const u=new URL(url);if(u.protocol!=='https:'||u.username||u.password)throw Error('このリンクは開けません。');await shell.openExternal(u.href);});
   handle('window',action=>{if(action==='close')window.close();if(action==='minimize')window.minimize();if(action==='maximize')window.isMaximized()?window.unmaximize():window.maximize();});
   handle('system-theme',()=>nativeTheme.shouldUseDarkColors?'dark':'light');
+  handle('update-state',()=>launcherUpdater.snapshot());
+  handle('update-check',()=>launcherUpdater.check());
+  handle('update-install',()=>launcherUpdater.install());
   const webState=()=>{
     if(!gameView || gameView.webContents.isDestroyed())return;
     window.webContents.send('web-state',{id:webGameId,url:gameView.webContents.getURL(),loading:gameView.webContents.isLoading(),back:gameView.webContents.navigationHistory.canGoBack(),forward:gameView.webContents.navigationHistory.canGoForward()});
@@ -52,6 +70,7 @@ app.whenReady().then(async()=>{
     gameView.webContents.setZoomFactor(Math.max(0.4,Math.min(0.7,width/1400)));
   };
   handle('web-open',async (id,bounds)=>{
+    requireNotUpdating();
     const g=service.game(id);if(!g.unityroomurl)throw Error('Web版のURLがありません。');
     closeWeb();webGameId=id;
     gameView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,partition:'persist:cgp-games'}});
@@ -80,5 +99,7 @@ app.whenReady().then(async()=>{
     if(service.jobs.size){const choice=dialog.showMessageBoxSync(window,{type:'question',buttons:['ダウンロードを続ける','中止して終了'],defaultId:0,cancelId:0,message:'ダウンロード中です。終了しますか？'});if(choice===0)event.preventDefault();else for(const id of service.jobs.keys())service.cancel(id);}
   });
   await window.loadFile(path.join(__dirname,'index.html'));window.show();
+  launcherUpdater.start();
 }).catch(e=>{dialog.showErrorBox('CGP Launcher',e.message);app.quit();});
+app.on('before-quit',()=>launcherUpdater?.stop());
 app.on('window-all-closed',()=>app.quit());

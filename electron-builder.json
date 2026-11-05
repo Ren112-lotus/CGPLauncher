@@ -1,0 +1,28 @@
+{
+  "appId": "com.cgpstudios.launcher.rebuilt",
+  "productName": "CGP Launcher Rebuilt",
+  "asar": true,
+  "directories": {
+    "output": "../CGP-Launcher-Windows/${version}",
+    "buildResources": "assets"
+  },
+  "files": ["src/**/*", "assets/**/*", "package.json", "!**/*.map"],
+  "win": {
+    "target": [{"target": "nsis", "arch": ["x64"]}],
+    "icon": "assets/logo.ico",
+    "artifactName": "CGP-Launcher-Rebuilt-Setup-${version}-${arch}.${ext}",
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "CGP Launcher Rebuilt"
+  },
+  "publish": [{"provider": "github", "owner": "Ren112-lotus", "repo": "CGPLauncher", "releaseType": "release"}],
+  "electronUpdaterCompatibility": ">=6.8.11"
+}

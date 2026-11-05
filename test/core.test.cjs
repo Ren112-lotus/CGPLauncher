@@ -28,9 +28,10 @@ test('旧ランチャーのメタデータを読み込み、ゲームファイ�
   assert.equal(service.settings.installed[id].dir,gameDir);assert.equal(await fs.readFile(path.join(gameDir,'Game.exe'),'utf8'),'fake game');
 });
 test('設定とお気に入りを保存し、再起動後も保持する',async t=>{
-  const {root,service,id}=await fixture(t);await service.favorite(id);await service.updateSettings({theme:'light',view:'list',autoSync:false});
+  const {root,service,id}=await fixture(t);assert.equal(service.settings.autoUpdate,true);await service.favorite(id);await service.updateSettings({theme:'light',view:'list',autoSync:false,autoUpdate:false});
   const second=new LauncherService({dataDir:service.dataDir,bundledCatalog:path.join(root,'games.json')});await second.init();
-  assert.equal(second.settings.theme,'light');assert.equal(second.settings.view,'list');assert.deepEqual(second.settings.favorites,[id]);
+  assert.equal(second.settings.theme,'light');assert.equal(second.settings.view,'list');assert.equal(second.settings.autoUpdate,false);assert.deepEqual(second.settings.favorites,[id]);
+  await assert.rejects(()=>second.updateSettings({autoUpdate:'false'}));
   await assert.rejects(()=>second.updateSettings({catalogUrl:'file:///bad'}));
 });
 test('ZIPからゲームを展開し、Unityの補助実行ファイルを選択肢から除外する',async t=>{
