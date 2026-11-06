@@ -42,7 +42,7 @@ app.whenReady().then(async()=>{
     prepareInstall:()=>service.save(),
     onChange:state=>window&&!window.isDestroyed()&&window.webContents.send('app-update',state)
   });
-  window=new BrowserWindow({width:1400,height:900,minWidth:1000,minHeight:700,frame:false,show:false,title:'CGP Launcher Rebuilt',backgroundColor:'#0f172a',icon:path.join(__dirname,'../assets/logo.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  window=new BrowserWindow({width:1400,height:900,minWidth:1000,minHeight:700,frame:false,roundedCorners:false,show:false,title:'CGP Launcher Rebuilt',backgroundColor:'#15191f',icon:path.join(__dirname,'../assets/logo.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   window.webContents.on('will-navigate',(event,url)=>{if(url!==localPage)event.preventDefault();});
   window.webContents.session.setPermissionRequestHandler((_w,_p,callback)=>callback(false));

@@ -93,7 +93,7 @@
           <h3 id="app-update-title" class="settings-heading"><i data-icon="download"></i>アップデート</h3>
           <div class="flex items-center justify-between gap-3"><span id="app-version" class="text-sm text-muted"></span><button id="update-check" type="button" class="secondary text-sm!">更新を確認</button></div>
           <p id="update-status" class="mt-3! mb-0! text-sm leading-relaxed text-muted" role="status" aria-live="polite"></p>
-          <progress id="update-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
+          <progress id="update-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded-none" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
           <button id="update-install-settings" type="button" class="primary mt-3" hidden>再起動して更新</button>
           <label class="checkbox"><span>自動アップデート</span><input id="auto-update" type="checkbox" title="終了時に適用"></label>
         </section>
@@ -126,9 +126,9 @@
   </dialog>
   <dialog id="choice-dialog" aria-labelledby="choice-title"><div class="modal-heading flex items-center justify-between border-b border-line px-7 py-[25px]"><h2 id="choice-title"></h2><button class="icon-button" id="choice-close" aria-label="閉じる"><i data-icon="close"></i></button></div><div id="choice-body" class="modal-body px-7 py-6"></div></dialog>
 
-  <section id="update-banner" class="fixed right-6 bottom-6 z-30 w-[420px] rounded-xl border border-blue-400/30 bg-side p-4 shadow-dialog" aria-label="ランチャーの更新" hidden>
+  <section id="update-banner" class="fixed right-6 bottom-6 z-30 w-[420px] rounded-none border border-blue-400/30 bg-side p-4 shadow-dialog" aria-label="ランチャーの更新" hidden>
     <div class="flex items-start gap-3"><i class="mt-0.5 text-blue-400" data-icon="download"></i><div class="min-w-0 flex-1"><p id="update-banner-title" class="m-0! text-sm font-semibold"></p><p id="update-banner-hint" class="mt-2! mb-0! text-xs leading-relaxed text-muted"></p></div></div>
-    <progress id="update-banner-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
+    <progress id="update-banner-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded-none" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
     <button id="update-install-banner" type="button" class="primary mt-3 w-full text-sm!" hidden>再起動して更新</button>
     <button id="update-retry" type="button" class="secondary mt-3 text-sm!" hidden>再試行</button>
   </section>

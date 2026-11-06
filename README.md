@@ -6,7 +6,7 @@
 ## ダウンロード・起動
 
 [最新版のリリース](https://github.com/Ren112-lotus/CGPLauncher/releases/latest) から
-`CGP-Launcher-Rebuilt-Setup-1.4.1-x64.exe` をダウンロードしてインストールしてください。
+`CGP-Launcher-Rebuilt-Setup-1.4.2-x64.exe` をダウンロードしてインストールしてください。
 ランチャー本体にPythonは不要です。
 
 v1.0.3以前のZIP版には更新機能がないため、最初の一度だけセットアップ版を
@@ -46,6 +46,7 @@ Tailwindユーティリティクラスで編集します。
 `src/tailwind.css` はTailwindの入力ファイルです。
 `@theme inline` に配色・フォント・影を定義し、ダーク／ライトの変数を切り替えます。
 共通のボタン、ナビゲーション、Markdown本文は `@layer components` で管理します。
+カード・ボタン・入力欄・モーダル・ウィンドウは角丸を使わず、直線的な形に統一しています。
 Windowsのタイトルバーをドラッグするための `app-drag` / `app-no-drag` は独自ユーティリティです。
 
 UIアイコンは [Lucide](https://lucide.dev/guide/static) のSVGを使用しています。

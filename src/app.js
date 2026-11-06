@@ -76,7 +76,7 @@ $('#sidebar-toggle').onclick = () => setSidebarCollapsed(!sidebarCollapsed);
 
 function toast(message, error = false) {
   const el = document.createElement('div');
-  el.className = 'max-w-[430px] rounded-lg border border-input-line bg-side px-4 py-3 text-sm text-ink shadow-dialog';
+  el.className = 'max-w-[430px] rounded-none border border-input-line bg-side px-4 py-3 text-sm text-ink shadow-dialog';
   if (error) el.classList.add('text-danger');
   el.textContent = message;
   $('#toasts').append(el);
@@ -127,7 +127,7 @@ function row(g) {
   return `<button class="game-row" data-detail="${g.id}" aria-current="${g.id === selected}" title="${esc(g.name)}">
     ${image(g)}
     <span class="min-w-0 flex-1"><span class="game-name">${esc(g.name)}</span>${g.authors.length ? `<span class="game-author">${esc(g.authors.join(', '))}</span>` : ''}</span>
-    ${running ? '<span class="absolute top-2 right-2 size-2 rounded-full bg-emerald-400"></span>' : ''}
+    ${running ? '<span class="absolute top-2 right-2 size-2 rounded-none bg-emerald-400"></span>' : ''}
     ${state.jobs[g.id] ? `<span class="absolute right-3 bottom-1 text-xs text-blue-300">${state.jobs[g.id].percent}%</span>` : ''}
   </button>`;
 }
@@ -182,7 +182,7 @@ function renderDetail() {
         <button class="icon-button" data-favorite="${g.id}" title="お気に入り" aria-label="お気に入り" aria-pressed="${fav}">${icon('heart')}</button>
       </div>
     </div>
-    ${job ? `<div class="px-6 pt-5 text-sm text-blue-300">${esc(job.stage)} ${job.percent}%<progress class="mt-2 block h-1.5 w-full overflow-hidden rounded" value="${job.percent}" max="100"></progress><button class="text-button" data-cancel="${g.id}">ダウンロードを中止</button></div>` : ''}
+    ${job ? `<div class="px-6 pt-5 text-sm text-blue-300">${esc(job.stage)} ${job.percent}%<progress class="mt-2 block h-1.5 w-full overflow-hidden rounded-none" value="${job.percent}" max="100"></progress><button class="text-button" data-cancel="${g.id}">ダウンロードを中止</button></div>` : ''}
     ${update ? `<p class="notice px-6">新しいバージョン ${esc(release.tag_name)} があります。 <button class="text-button" data-update="${g.id}" ${job || running ? 'disabled' : ''}>更新をダウンロード ↗</button></p>` : ''}
     ${g.description || g.githuburl ? `<div class="detail-info"><section>
       <div class="detail-info-heading"><h2>ゲーム情報</h2>${g.githuburl ? `<button class="icon-button" data-retry="${g.id}" title="READMEを再読み込み" aria-label="READMEを再読み込み">${icon('refresh')}</button>` : ''}</div>
@@ -232,7 +232,7 @@ function choose(title, items, note) {
   return new Promise(resolve => {
     const dialog = $('#choice-dialog');
     $('#choice-title').textContent = title;
-    $('#choice-body').innerHTML = (note ? `<p class="text-sm leading-relaxed text-muted">${esc(note)}</p>` : '') + items.map((x,n) => `<button class="mb-2 block w-full rounded-lg border border-input-line p-4 text-left hover:bg-raised" data-choice="${n}">${esc(x.label)}${x.sub ? `<small class="mt-2 block text-muted">${esc(x.sub)}</small>` : ''}</button>`).join('');
+    $('#choice-body').innerHTML = (note ? `<p class="text-sm leading-relaxed text-muted">${esc(note)}</p>` : '') + items.map((x,n) => `<button class="mb-2 block w-full rounded-none border border-input-line p-4 text-left hover:bg-raised" data-choice="${n}">${esc(x.label)}${x.sub ? `<small class="mt-2 block text-muted">${esc(x.sub)}</small>` : ''}</button>`).join('');
     const done = value => { dialog.close(); $('#choice-body').onclick = null; dialog.oncancel = null; $('#choice-close').onclick = null; resolve(value); };
     $('#choice-body').onclick = e => { const el = e.target.closest('[data-choice]'); if (el) done(items[Number(el.dataset.choice)].value); };
     $('#choice-close').onclick = () => done(null);
