@@ -100,3 +100,11 @@ test('Sitesで全作品を非公開にした場合は空の公開一覧を反映
   await service.sync();assert.deepEqual(service.games,[]);
   service.settings.catalogUrl='https://example.org/games.json';await assert.rejects(()=>service.sync(),/空/);
 });
+
+test('Web音量を保存・復元し、範囲外や文字列の音量を拒否する',async t=>{
+  const {root,service}=await fixture(t);assert.equal(service.settings.webVolume,100);
+  await service.updateSettings({webVolume:37});
+  const next=new LauncherService({dataDir:service.dataDir,bundledCatalog:path.join(root,'games.json')});await next.init();assert.equal(next.settings.webVolume,37);
+  for(const value of [-1,101,NaN,Infinity,'50'])await assert.rejects(()=>next.updateSettings({webVolume:value}),/音量/);
+  await next.updateSettings({webVolume:0});assert.equal(next.settings.webVolume,0);
+});

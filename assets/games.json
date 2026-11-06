@@ -260,5 +260,80 @@
     "githuburl": "https://github.com/NemoP1/Tatsu2",
     "unityroomurl": "",
     "image": ""
+  },
+  {
+    "id": "28d8a2c191924ed6",
+    "name": "テトライミング",
+    "authors": [],
+    "tags": [
+      "#RookieJam_2026"
+    ],
+    "description": "テトリスとアクションを掛け合わせたパズルアクションゲームです。",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/tetris-climbing-game",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/ac7d0ee8-3aa3-4ffc-a9ff-40bb5fda38eb.png"
+  },
+  {
+    "id": "9894d4245d1e467c",
+    "name": "Duellatro",
+    "authors": [],
+    "tags": [
+      "#夏チーム_2026"
+    ],
+    "description": "対戦型ポーカーゲームです。インフレしていくスコアの中、君はどう戦う？",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/duellatro",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/d1cf52e2-1927-4515-946d-9dd0dc7a5281.png"
+  },
+  {
+    "id": "d26346fe6a994b60",
+    "name": "Oracle of Rezeria",
+    "authors": [],
+    "tags": [
+      "#夏チーム_2026"
+    ],
+    "description": "カードの効果を駆使して戦う戦略カードアクション",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/cgp_card_action",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/81701a7b-30cc-427d-a614-a6a4bf23f035.png"
+  },
+  {
+    "id": "85df5283c1a348a1",
+    "name": "退学RTA",
+    "authors": [],
+    "tags": [
+      "#夏チーム_2026"
+    ],
+    "description": "",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/taigakurta",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/3de6f2e0-4ec1-4ef9-9a13-b6f83306fe61.png"
+  },
+  {
+    "id": "1a4ae782984046e4",
+    "name": "君が目覚めるその日まで",
+    "authors": [],
+    "tags": [
+      "#夏チーム_2026"
+    ],
+    "description": "ストーリー2D横スクロールゲームです。\n魔法を集めて夢から覚めよう！",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/kimi_gameza",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/a700dc3f-1096-4ffd-a6da-ca1588d04f74.png"
+  },
+  {
+    "id": "268448479b5f4d36",
+    "name": "Blend Trails: Color Puzzle",
+    "authors": [
+      "ZUME"
+    ],
+    "tags": [
+      "#パズル",
+      "#カジュアル"
+    ],
+    "description": "2色のルートをなぞり、色を重ねながら盤面を埋めるカラーパズルです。",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/blendtrails",
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/37f2d971-4103-4d08-a2f2-6b9b6ba98642.png"
   }
 ]

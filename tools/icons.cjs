@@ -32,6 +32,8 @@ const names = {
   back: 'chevron-left',
   forward: 'chevron-right',
   save: 'save',
+  volume: 'volume-2',
+  'volume-off': 'volume-x',
 };
 
 async function run() {

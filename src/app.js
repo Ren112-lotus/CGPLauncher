@@ -8,13 +8,14 @@ $$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const scopes = {all:'すべてのゲーム', installed:'インストール済み', favorites:'お気に入り', recent:'最近プレイしたゲーム'};
 let state, selected = null, webId = null;
-let scope = 'all', filter = 'all', tag = '', query = '', sort = 'name';
+let scope = 'all', filter = 'browser', tag = '', query = '', sort = 'name';
 let loadedDetails = new Set(), loadingDetails = new Set(), detailKey = '';
 const systemTheme = await api.systemTheme();
 const game = id => state.games.find(g => g.id === id);
 const webModal = $('#web-modal');
 let sidebarCollapsed = false;
 let appUpdate = null;
+let webURL = '', previousVolume = 100;
 
 function updateBusyReason() {
   if (Object.keys(state?.jobs || {}).length) return 'ゲームのダウンロードが完了すると更新できます。';
@@ -51,7 +52,7 @@ function renderAppUpdate() {
   const showBanner = ['downloading','downloaded','installing'].includes(status) || status === 'error' && !!version;
   $('#update-banner').hidden = !showBanner;
   $('#update-banner-title').textContent = messages[status] || '';
-  $('#update-banner-hint').textContent = status === 'downloaded' ? (busy || '「再起動して更新」で適用できます。') : status === 'downloading' ? 'ダウンロード中もゲームを利用できます。' : status === 'error' ? '再試行するか、あとで設定から確認できます。' : '';
+  $('#update-banner-hint').textContent = status === 'downloaded' ? (busy || (state.settings.autoUpdate ? '終了時に自動適用します。次回起動から新版になります。' : '「再起動して更新」で適用できます。')) : status === 'downloading' ? 'ダウンロード中もゲームを利用できます。' : status === 'error' ? '再試行するか、あとで設定から確認できます。' : '';
   $('#update-retry').hidden = status !== 'error';
   $('#toasts').classList.toggle('bottom-6', !showBanner);
   $('#toasts').classList.toggle('bottom-52', showBanner);
@@ -274,6 +275,8 @@ async function updateBounds() { if (webId && webModal.open) await api.webBounds(
 async function openWeb(id) {
   if (webId) await closeWeb();
   webId = id;
+  webURL = game(id).unityroomurl;
+  renderVolume(state.settings.webVolume);
   renderAppUpdate();
   $('#web-title').textContent = game(id).name + ' - Unity Room';
   $('#web-error').hidden = true;
@@ -299,7 +302,19 @@ $('#web-exit').onclick = safe(closeWeb);
 $('#web-back').onclick = safe(() => api.webControl('back'));
 $('#web-forward').onclick = safe(() => api.webControl('forward'));
 $('#web-reload').onclick = safe(() => { $('#web-error').hidden = true; return api.webControl('reload'); });
-$('#web-external').onclick = safe(() => api.external(game(webId).unityroomurl));
+$('#web-external').onclick = safe(() => api.external(webURL));
+function renderVolume(value) {
+  $('#web-volume').value=value;
+  $('#web-volume-value').textContent=`${Math.round(value)}%`;
+  $('#web-volume').setAttribute('aria-valuetext',`${Math.round(value)}%`);
+  $('#web-mute').innerHTML=icon(value===0?'volume-off':'volume');
+  $('#web-mute').setAttribute('aria-label',value===0?'ミュートを解除':'ミュート');
+  $('#web-mute').setAttribute('aria-pressed',String(value===0));
+  if(value>0)previousVolume=value;
+}
+$('#web-volume').oninput=safe(async event=>{const value=Number(event.target.value);renderVolume(value);await api.webVolume(value);});
+$('#web-volume').onchange=safe(()=>api.settings({webVolume:Number($('#web-volume').value)}));
+$('#web-mute').onclick=safe(async()=>{const value=Number($('#web-volume').value)===0?previousVolume:0;renderVolume(value);await api.webVolume(value);await api.settings({webVolume:value});});
 
 document.addEventListener('click', safe(async event => {
   const el = event.target.closest('button,a'); if (!el) return;
@@ -353,7 +368,7 @@ $$('.close-dialog').forEach(el => el.onclick = () => settingsDialog.close());
 $('#choose-folder').onclick = safe(async () => { const folder = await api.folder(); if (folder) $('#download-dir').value = folder; });
 $('#default-folder').onclick = () => $('#download-dir').value = '';
 $('#reset-settings').onclick = () => {
-  $('#catalog-url').value = 'https://raw.githubusercontent.com/Ren112-lotus/CGPLauncher/refs/heads/main/games.json';
+  $('#catalog-url').value = 'https://cgp-catalog.renren112.chatgpt.site/api/games';
   $('#auto-sync').checked = true; $('#download-dir').value = ''; $('#theme').value = 'dark';
   $('#auto-update').checked = true;
 };
@@ -379,4 +394,3 @@ $('#update-retry').onclick = $('#update-check').onclick;
 const applyUpdate = safe(async () => { await api.updateInstall(); });
 $('#update-install-settings').onclick = applyUpdate;
 $('#update-install-banner').onclick = applyUpdate;
-if (state.settings.autoSync) sync(true);

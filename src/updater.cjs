@@ -64,7 +64,11 @@ class LauncherUpdater {
     }).catch(error => { this.fail(error); return this.snapshot(); }).finally(() => { this.checkPromise = null; });
     return this.checkPromise;
   }
-  install() {
+  installOnExit() {
+    if (!this.supported || !this.enabled() || this.state.status !== 'downloaded' || this.busyReason()) return null;
+    return this.install({relaunch:false});
+  }
+  install({relaunch = true} = {}) {
     if (this.installPromise) return this.installPromise;
     if (this.state.status !== 'downloaded') return Promise.reject(Error('更新のダウンロードが完了していません。'));
     const busy = this.busyReason();
@@ -74,7 +78,7 @@ class LauncherUpdater {
       const reason = this.busyReason();
       if (reason) throw Error(reason);
       // Silent per-user NSIS installation; relaunch after applying the update.
-      this.updater.quitAndInstall(true, true);
+    this.updater.quitAndInstall(true, relaunch);
       return this.snapshot();
     }).catch(error => {
       this.set({status: 'downloaded', error: error.message});

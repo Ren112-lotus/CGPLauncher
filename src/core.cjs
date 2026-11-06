@@ -12,7 +12,7 @@ function legacyCatalogUrl(value) {
       /^\/(?:Ren112-lotus|Rofutok112)\/CGPLauncher\/(?:refs\/heads\/)?main\/games\.json$/i.test(url.pathname);
   } catch { return false; }
 }
-const defaults = () => ({catalogUrl: DEFAULT_URL, autoSync: true, autoUpdate: true, downloadDir: '', theme: 'dark', view: 'list', favorites: [], installed: {}, history: {}});
+const defaults = () => ({catalogUrl: DEFAULT_URL, autoSync: true, autoUpdate: true, webVolume: 100, downloadDir: '', theme: 'dark', view: 'list', favorites: [], installed: {}, history: {}});
 const exists = async p => !!(await fs.stat(p).catch(() => null));
 const hash = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
 function httpsUrl(value) {
@@ -103,6 +103,7 @@ class LauncherService {
   async init() {
     await fs.mkdir(this.dataDir, {recursive:true});
     this.settings = {...defaults(), ...await readJson(path.join(this.dataDir, 'settings.json'), {})};
+    if (!Number.isFinite(this.settings.webVolume) || this.settings.webVolume < 0 || this.settings.webVolume > 100) this.settings.webVolume = 100;
     // Move only the old built-in feed. Preserve explicitly configured feeds.
     if (legacyCatalogUrl(this.settings.catalogUrl)) { this.settings.catalogUrl = DEFAULT_URL; await this.save(); }
     this.games = normalizeCatalog(await readJson(path.join(this.dataDir,'catalog.json'), await readJson(this.bundledCatalog, [])));
@@ -143,7 +144,7 @@ class LauncherService {
   emit() {this.onChange(this.snapshot());}
   game(id) {const g=this.games.find(g=>g.id===id); if (!g) throw Error('ゲームが見つかりません。'); return g;}
   async updateSettings(patch) {
-    const allowed = ['catalogUrl','autoSync','autoUpdate','downloadDir','theme','view'];
+    const allowed = ['catalogUrl','autoSync','autoUpdate','webVolume','downloadDir','theme','view'];
     for (const key of Object.keys(patch)) if (!allowed.includes(key)) throw Error('不明な設定です。');
     if (patch.catalogUrl !== undefined) httpsUrl(patch.catalogUrl);
     if (patch.theme && !['dark','light','system'].includes(patch.theme)) throw Error('不明なテーマです。');
@@ -151,6 +152,7 @@ class LauncherService {
     if (patch.downloadDir && !path.isAbsolute(patch.downloadDir)) throw Error('保存先は絶対パスで指定してください。');
     if (patch.autoSync !== undefined && typeof patch.autoSync !== 'boolean') throw Error('自動同期の値が正しくありません。');
     if (patch.autoUpdate !== undefined && typeof patch.autoUpdate !== 'boolean') throw Error('自動アップデートの値が正しくありません。');
+    if (patch.webVolume !== undefined && (!Number.isFinite(patch.webVolume) || patch.webVolume < 0 || patch.webVolume > 100)) throw Error('音量は0〜100で指定してください。');
     Object.assign(this.settings,patch); await this.save(); this.emit(); return this.snapshot();
   }
   async sync() {

@@ -50,13 +50,26 @@ test('バックグラウンドのダウンロード失敗を捕捉し、再確�
   updater.checkForUpdates = async () => { updater.emit('update-not-available',{version:'1.1.0'}); return {}; };
   await manager.check(); assert.equal(manager.snapshot().status,'idle'); assert.equal(manager.snapshot().error,'');
 });
-test('ゲーム実行・ダウンロード中は適用を拒否し、通常終了時にも勝手に更新しない', async () => {
+test('ゲーム実行・ダウンロード中は終了時の自動適用も拒否する', async () => {
   for (const reason of ['ゲームを終了してください','ダウンロード中です','Unity Roomを閉じてください']) {
     const {manager,updater} = controller({busyReason:()=>reason});
     updater.emit('update-downloaded',{version:'1.2.0'});
     await assert.rejects(()=>manager.install(),new RegExp(reason));
+    assert.equal(manager.installOnExit(),null);
     assert.equal(manager.snapshot().status,'downloaded'); assert.deepEqual(updater.installs,[]); assert.equal(updater.autoInstallOnAppQuit,false);
   }
+});
+
+test('通常終了時は設定を保存して自動適用し、終了後に再起動しない',async()=>{
+  let saved=false;const {manager,updater}=controller({prepareInstall:async()=>{saved=true;}});
+  updater.emit('update-downloaded',{version:'1.3.0'});
+  updater.quitAndInstall=(...args)=>{assert.equal(saved,true);updater.installs.push(args);};
+  await manager.installOnExit();assert.deepEqual(updater.installs,[[true,false]]);
+});
+
+test('自動更新がオフまたは取得未完了なら終了時にインストールしない',()=>{
+  const {manager,updater}=controller({enabled:()=>false});
+  assert.equal(manager.installOnExit(),null);updater.emit('update-downloaded',{version:'1.3.0'});assert.equal(manager.installOnExit(),null);assert.deepEqual(updater.installs,[]);
 });
 test('設定保存後に無人インストールと再起動を要求し、連続クリックをまとめる', async () => {
   let saved = false;

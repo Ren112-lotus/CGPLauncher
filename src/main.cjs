@@ -1,12 +1,14 @@
-const {app,BrowserWindow,WebContentsView,ipcMain,dialog,shell,nativeTheme} = require('electron');
+const {app,BrowserWindow,WebContentsView,ipcMain,dialog,shell,nativeTheme,session} = require('electron');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const {LauncherService}=require('./core.cjs');
 const {LauncherUpdater}=require('./updater.cjs');
+const {CatalogSynchronizer}=require('./catalog-sync.cjs');
 const {autoUpdater}=require('electron-updater');
 const {existsSync}=require('node:fs');
-let window,service,gameView,webGameId,launcherUpdater;
+let window,service,gameView,webGameId,launcherUpdater,catalogSync;
 let pendingGameActions=0;
+let systemEnding=false,skipAutoExitUpdate=false;
 const localPage=pathToFileURL(path.join(__dirname,'index.html')).href;
 if(process.env.CGP_TEST_DATA) app.setPath('userData',process.env.CGP_TEST_DATA);
 else app.setPath('userData',path.join(app.getPath('appData'),'CGP Launcher Rebuilt'));
@@ -17,6 +19,19 @@ app.whenReady().then(async()=>{
   app.setAppUserModelId('com.cgpstudios.launcher.rebuilt');
   service=new LauncherService({dataDir:app.getPath('userData'),bundledCatalog:path.join(__dirname,'../assets/games.json'),legacyResources:path.join(app.getPath('home'),'AppData/Local/Programs/CGP Modern Launcher/CGP Launcher/resources'),onChange:s=>window&&!window.isDestroyed()&&window.webContents.send('state',s)});
   await service.init();
+  catalogSync=new CatalogSynchronizer({sync:()=>service.sync(),enabled:()=>service.settings.autoSync});
+  const gameSession=session.fromPartition('persist:cgp-games');
+  gameSession.registerPreloadScript({type:'frame',id:'cgp-web-audio',filePath:path.join(__dirname,'web-audio-preload.cjs')});
+  const setWebVolume=value=>{
+    if(!Number.isFinite(value)||value<0||value>100)throw Error('音量は0〜100で指定してください。');
+    service.settings.webVolume=value;
+    if(gameView&&!gameView.webContents.isDestroyed()){
+      gameView.webContents.setAudioMuted(value===0);
+      for(const frame of gameView.webContents.mainFrame.framesInSubtree){try{frame.send('web-audio-volume',value);}catch{}}
+    }
+    return value;
+  };
+  ipcMain.on('web-audio-settings',event=>{event.returnValue=gameView&&event.sender===gameView.webContents?service.settings.webVolume:100;});
   launcherUpdater=new LauncherUpdater({
     updater:autoUpdater,version:app.getVersion(),
     supported:process.platform==='win32' && app.isPackaged && existsSync(path.join(process.resourcesPath,'app-update.yml')),
@@ -34,8 +49,9 @@ app.whenReady().then(async()=>{
     return fn(...args);
   });
   handle('snapshot',()=>service.snapshot());
-  handle('sync',()=>service.sync());
-  handle('settings',p=>service.updateSettings(p));
+  handle('sync',()=>catalogSync.sync());
+  handle('settings',async p=>{const result=await service.updateSettings(p);if(p.webVolume!==undefined)setWebVolume(p.webVolume);if(p.autoSync===true)catalogSync.automatic(true);return result;});
+  handle('web-volume',setWebVolume);
   handle('favorite',id=>service.favorite(id));
   handle('details',(id,force)=>service.details(id,force));
   const requireNotUpdating=()=>{if(launcherUpdater.isInstalling)throw Error('ランチャーの更新を適用中です。');};
@@ -73,7 +89,10 @@ app.whenReady().then(async()=>{
     requireNotUpdating();
     const g=service.game(id);if(!g.unityroomurl)throw Error('Web版のURLがありません。');
     closeWeb();webGameId=id;
-    gameView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,partition:'persist:cgp-games'}});
+    // Subframe preloads are required for Unity Room's cross-origin game frame.
+    // The sandbox remains enabled and Node is never exposed to page scripts.
+    gameView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,nodeIntegrationInSubFrames:true,sandbox:true,session:gameSession}});
+    gameView.webContents.setAudioMuted(service.settings.webVolume===0);
     gameView.setBackgroundColor('#10151d');
     gameView.webContents.session.setPermissionRequestHandler((_w,_p,cb)=>cb(false));
     gameView.webContents.setWindowOpenHandler(()=>({action:'deny'}));
@@ -95,11 +114,20 @@ app.whenReady().then(async()=>{
   handle('web-bounds',positionWeb);
   handle('web-control',action=>{if(action==='close'){closeWeb();return;}if(!gameView)return;const wc=gameView.webContents;if(action==='back'&&wc.navigationHistory.canGoBack())wc.navigationHistory.goBack();if(action==='forward'&&wc.navigationHistory.canGoForward())wc.navigationHistory.goForward();if(action==='reload')wc.reload();if(action==='hide')gameView.setVisible(false);if(action==='show')gameView.setVisible(true);});
   window.on('closed',()=>{if(gameView&&!gameView.webContents.isDestroyed())gameView.webContents.close();gameView=null;});
+  window.on('focus',()=>catalogSync.automatic());
+  for(const event of ['query-session-end','session-end'])window.on(event,()=>{systemEnding=true;launcherUpdater.stop();});
   window.on('close',event=>{
     if(service.jobs.size){const choice=dialog.showMessageBoxSync(window,{type:'question',buttons:['ダウンロードを続ける','中止して終了'],defaultId:0,cancelId:0,message:'ダウンロード中です。終了しますか？'});if(choice===0)event.preventDefault();else for(const id of service.jobs.keys())service.cancel(id);}
+    if(event.defaultPrevented||systemEnding||skipAutoExitUpdate||launcherUpdater.isInstalling)return;
+    // Closing this window also ends its web game. Never replace files while a
+    // separate Windows game, download or launch preparation is still active.
+    if(!service.running.size&&!service.jobs.size&&!pendingGameActions)closeWeb();
+    const installing=launcherUpdater.installOnExit();
+    if(installing){event.preventDefault();void installing.catch(()=>{skipAutoExitUpdate=true;});}
   });
   await window.loadFile(path.join(__dirname,'index.html'));window.show();
   launcherUpdater.start();
+  catalogSync.start();
 }).catch(e=>{dialog.showErrorBox('CGP Launcher',e.message);app.quit();});
-app.on('before-quit',()=>launcherUpdater?.stop());
+app.on('before-quit',()=>{launcherUpdater?.stop();catalogSync?.stop();});
 app.on('window-all-closed',()=>app.quit());

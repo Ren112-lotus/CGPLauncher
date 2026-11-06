@@ -55,6 +55,11 @@
       <header class="flex h-16 shrink-0 items-center gap-4 bg-side px-4">
         <h2 id="web-title" class="min-w-0 flex-1 truncate text-[16px] font-medium"></h2>
         <div class="flex items-center gap-2">
+          <div class="mr-2 flex items-center gap-2 border-r border-line pr-4">
+            <button id="web-mute" type="button" class="icon-button" aria-label="ミュート" aria-pressed="false"><i data-icon="volume"></i></button>
+            <input id="web-volume" class="h-5 w-28 cursor-pointer accent-accent" type="range" min="0" max="100" step="1" value="100" aria-label="ゲームの音量" aria-valuetext="100%">
+            <output id="web-volume-value" for="web-volume" class="w-10 text-right text-xs tabular-nums text-muted">100%</output>
+          </div>
           <button id="web-back" class="icon-button" title="戻る" aria-label="前のページ" hidden><i data-icon="back"></i></button>
           <button id="web-forward" class="icon-button" title="進む" aria-label="次のページ" hidden><i data-icon="forward"></i></button>
           <button id="web-reload" class="icon-button" title="再読み込み" aria-label="ページを再読み込み"><i data-icon="refresh"></i></button>
@@ -89,12 +94,12 @@
           <progress id="update-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
           <button id="update-install-settings" type="button" class="primary mt-3" hidden>再起動して更新</button>
           <label class="checkbox mt-4 flex items-center gap-2 text-sm text-muted"><input id="auto-update" class="accent-accent" type="checkbox">起動時と定期的に更新を確認する</label>
-          <p class="mt-2! mb-0! text-xs leading-relaxed text-muted">新しい版は自動でダウンロードします。適用は「再起動して更新」を押したときに行います。</p>
+          <p class="mt-2! mb-0! text-xs leading-relaxed text-muted">新しい版を自動でダウンロードし、ゲーム終了後にランチャーを閉じると自動適用します。次回起動から新版になります。「再起動して更新」で今すぐ適用することもできます。</p>
         </section>
         <section>
           <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold"><i class="text-blue-400" data-icon="globe"></i>リモート設定</h3>
           <label>ゲームリストURL<input id="catalog-url" type="url" required></label>
-          <label class="checkbox mt-4 flex items-center gap-2 text-sm text-muted"><input id="auto-sync" class="accent-accent" type="checkbox">起動時に自動同期</label>
+          <label class="checkbox mt-4 flex items-center gap-2 text-sm text-muted"><input id="auto-sync" class="accent-accent" type="checkbox">ゲーム一覧を自動同期（起動時・1分ごと）</label>
         </section>
         <section>
           <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold"><i data-icon="folder"></i>ダウンロード設定</h3>
