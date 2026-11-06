@@ -1,7 +1,7 @@
 {
   "name": "cgp-launcher-rebuilt",
   "productName": "CGP Launcher Rebuilt",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "CGPのゲームライブラリとWindowsゲームランチャー",
   "main": "src/main.cjs",

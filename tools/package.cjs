@@ -5,12 +5,14 @@ async function run(){
   const root=path.join(__dirname,'..');
   const {version}=require('../package.json');
   const output=path.join(root,'..','CGP-Launcher-Windows',version);
-  const catalog=path.join(root,'games.json');
-  if(await fs.stat(catalog).catch(()=>null)){
-    const data=JSON.parse(await fs.readFile(catalog,'utf8'));
-    require('../src/core.cjs').normalizeCatalog(data);
-    await fs.writeFile(path.join(root,'assets','games.json'),(await fs.readFile(catalog,'utf8')).replace(/\r\n/g,'\n').trimEnd()+'\n','utf8');
-  }
+  // The live Sites database is authoritative. Ship a snapshot for offline use.
+  const {DEFAULT_URL,normalizeCatalog}=require('../src/core.cjs');
+  const response=await fetch(DEFAULT_URL,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(25000)});
+  if(!response.ok) throw Error(`カタログを取得できませんでした (HTTP ${response.status})。`);
+  const text=await response.text();
+  if(Buffer.byteLength(text)>15*1024**2) throw Error('カタログが大きすぎます。');
+  const data=JSON.parse(text); normalizeCatalog(data);
+  await fs.writeFile(path.join(root,'assets','games.json'),JSON.stringify(data,null,2)+'\n','utf8');
   await fs.mkdir(output,{recursive:true});
   const result=await build({projectDir:root,config:path.join(root,'electron-builder.json'),win:['nsis'],x64:true,publish:'never'});
   await require('./verify-release.cjs').verifyRelease(output);

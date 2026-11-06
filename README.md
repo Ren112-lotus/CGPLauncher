@@ -6,7 +6,7 @@
 ## ダウンロード・起動
 
 [最新版のリリース](https://github.com/Ren112-lotus/CGPLauncher/releases/latest) から
-`CGP-Launcher-Rebuilt-Setup-1.1.0-x64.exe` をダウンロードしてインストールしてください。
+`CGP-Launcher-Rebuilt-Setup-1.2.0-x64.exe` をダウンロードしてインストールしてください。
 ランチャー本体にPythonは不要です。
 
 v1.0.3以前のZIP版には更新機能がないため、最初の一度だけセットアップ版を
@@ -78,11 +78,20 @@ CSSはアプリに同梱され、実行時のCDNやTailwindランタイムは不
 - WebViewは右上の×、またはWebView内で Ctrl+W を押して閉じる
 - GitHub ReleasesのZIP取得、展開、実行ファイル選択、起動状態表示
 - GitHub README表示、外部ブラウザで開く
-- games.json同期、オフライン時の保存済みカタログ表示
+- SitesのカタログAPIから同期、オフライン時の保存済みカタログ表示
 - ダウンロード先、起動時同期、ダーク／ライト／システムテーマの保存
 - 旧ランチャー標準保存先のメタデータからインストール済みゲームを自動検出
 
 ## データと制約
+
+ゲーム情報の管理は [CGP ゲーム管理](https://cgp-catalog.renren112.chatgpt.site/) で行います。
+管理者のChatGPTアカウントでログインし、編集して「保存する」を押してください。
+「公開中」のゲームだけ [カタログAPI](https://cgp-catalog.renren112.chatgpt.site/api/games) に配信されます。
+既定のGitHub games.json URLを使っていた設定は、v1.2.0でSitesへ自動移行します。
+独自に指定したカタログURL、お気に入り、インストール情報、履歴は保持します。
+ゲームごとの固定IDがあるため、Sitesで作品名や配布URLを編集しても登録を引き継げます。
+ビルド時はSitesからオフライン用カタログを取得します。ルートのgames.jsonと旧Pythonエディターは旧版用の保存資料です。
+アプリ本体の自動更新・Windowsゲームの配布にはGitHub Releasesを使用します。
 
 設定やゲームの標準保存先は `%APPDATA%/CGP Launcher Rebuilt` です。
 旧ランチャーから検出したゲームは元の場所を参照します。旧アプリのGamesフォルダを

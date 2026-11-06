@@ -4,7 +4,14 @@ const crypto = require('node:crypto');
 const { spawn } = require('node:child_process');
 const AdmZip = require('adm-zip');
 
-const DEFAULT_URL = 'https://raw.githubusercontent.com/Ren112-lotus/CGPLauncher/refs/heads/main/games.json';
+const DEFAULT_URL = 'https://cgp-catalog.renren112.chatgpt.site/api/games';
+function legacyCatalogUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'raw.githubusercontent.com' && !url.search && !url.hash &&
+      /^\/(?:Ren112-lotus|Rofutok112)\/CGPLauncher\/(?:refs\/heads\/)?main\/games\.json$/i.test(url.pathname);
+  } catch { return false; }
+}
 const defaults = () => ({catalogUrl: DEFAULT_URL, autoSync: true, autoUpdate: true, downloadDir: '', theme: 'dark', view: 'list', favorites: [], installed: {}, history: {}});
 const exists = async p => !!(await fs.stat(p).catch(() => null));
 const hash = s => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
@@ -25,7 +32,8 @@ function normalizeCatalog(data) {
   return data.map(g => {
     if (!g || typeof g.name !== 'string' || !g.name.trim()) throw Error('ゲーム名がない項目があります。');
     const name = g.name.trim().slice(0, 200);
-    const id = hash(name + '|' + (g.githuburl || g.unityroomurl || ''));
+    if (g.id !== undefined && (typeof g.id !== 'string' || !/^[a-f0-9]{16}$/.test(g.id))) throw Error('ゲームIDが正しくありません。');
+    const id = g.id || hash(name + '|' + (g.githuburl || g.unityroomurl || ''));
     if (seen.has(id)) throw Error('同じゲームが重複しています。');
     seen.add(id);
     const list = v => Array.isArray(v) ? v.filter(x => typeof x === 'string').map(x => x.slice(0, 200)).slice(0, 50) : [];
@@ -78,7 +86,7 @@ async function extractZipSafe(zipFile, dest) {
 async function request(url, accept = 'application/vnd.github+json') {
   const response = await fetch(httpsUrl(url), {headers:{'User-Agent':'CGP-Launcher-Rebuilt', Accept:accept}, signal:AbortSignal.timeout(25000)});
   if (!response.ok) {
-    if (response.status === 403 || response.status === 429) throw Error('GitHubのアクセス制限に達しました。時間をおいて再試行してください。');
+    if (response.status === 403 || response.status === 429) throw Error('アクセスが制限されています。時間をおいて再試行してください。');
     if (response.status === 404) throw Error('公開情報が見つかりませんでした。');
     throw Error(`通信に失敗しました (HTTP ${response.status})。`);
   }
@@ -95,6 +103,8 @@ class LauncherService {
   async init() {
     await fs.mkdir(this.dataDir, {recursive:true});
     this.settings = {...defaults(), ...await readJson(path.join(this.dataDir, 'settings.json'), {})};
+    // Move only the old built-in feed. Preserve explicitly configured feeds.
+    if (legacyCatalogUrl(this.settings.catalogUrl)) { this.settings.catalogUrl = DEFAULT_URL; await this.save(); }
     this.games = normalizeCatalog(await readJson(path.join(this.dataDir,'catalog.json'), await readJson(this.bundledCatalog, [])));
     this.cache = await readJson(path.join(this.dataDir,'details.json'), {});
     await this.importLegacy();
@@ -146,7 +156,7 @@ class LauncherService {
   async sync() {
     const raw = await request(this.settings.catalogUrl, 'application/json');
     const games = normalizeCatalog(raw);
-    if (!games.length) throw Error('ゲームリストが空です。現在のリストを保持しました。');
+    if (!games.length && this.settings.catalogUrl !== DEFAULT_URL) throw Error('ゲームリストが空です。現在のリストを保持しました。');
     await atomicJson(path.join(this.dataDir,'catalog.json'),raw);
     this.games=games; await this.importLegacy(); await this.checkInstalled(); this.emit(); return this.snapshot();
   }
