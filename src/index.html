@@ -23,41 +23,43 @@
       <div class="shrink-0 px-4 pt-5 pb-4">
         <div class="mb-4 flex h-10 items-center gap-3">
           <img class="size-8 object-contain" src="../assets/logo.png" alt="CGP">
-          <div class="min-w-0 flex-1"><div class="bg-linear-to-r from-blue-500 to-violet-500 bg-clip-text text-[21px] leading-[1.2] font-bold text-transparent">CGP Launcher</div><p class="m-0! mt-1! text-xs text-muted">ゲームランチャー</p></div>
+          <div class="brand-name min-w-0 flex-1">CGP Launcher</div>
           <span class="size-8 shrink-0" aria-hidden="true"></span>
         </div>
-        <label class="flex h-[42px] items-center gap-3 rounded-lg border border-input-line bg-input px-3 text-muted focus-within:border-accent">
-          <i data-icon="search"></i><input id="search" class="min-w-0 w-full border-0 bg-transparent text-[16px] text-ink outline-none" placeholder="ゲームを検索..." aria-label="ゲーム・作者・タグを検索" autocomplete="off">
+        <label class="search-field">
+          <i data-icon="search"></i><input id="search" class="min-w-0 w-full border-0 bg-transparent text-sm text-ink outline-none" placeholder="ゲームを検索" aria-label="ゲーム・作者・タグを検索" autocomplete="off">
           <button id="filters-toggle" type="button" class="icon-button size-6!" title="絞り込み・並び替え" aria-label="絞り込み・並び替え"><i data-icon="filter"></i></button>
         </label>
       </div>
-      <div class="flex shrink-0 items-center gap-2 border-y border-line px-4 py-4">
-        <button id="grid-view" class="view-button flex-1" aria-label="グリッド表示" title="グリッド表示"><i data-icon="grid"></i></button>
-        <button id="list-view" class="view-button flex-1" aria-label="リスト表示" title="リスト表示"><i data-icon="list"></i></button>
-        <button id="sync" class="view-button w-8" aria-label="ゲームリストを同期" title="再読み込み"><i data-icon="refresh"></i></button>
-        <button id="settings" class="view-button w-8" aria-label="設定" title="設定"><i data-icon="settings"></i></button>
+      <div class="sidebar-tools">
+        <div class="view-switch" role="group" aria-label="表示形式">
+          <button id="grid-view" class="view-button" aria-label="グリッド表示" title="グリッド表示"><i data-icon="grid"></i></button>
+          <button id="list-view" class="view-button" aria-label="リスト表示" title="リスト表示"><i data-icon="list"></i></button>
+        </div>
+        <button id="sync" class="icon-button ml-auto" aria-label="ゲームリストを同期" title="再読み込み"><i data-icon="refresh"></i></button>
+        <button id="settings" class="icon-button" aria-label="設定" title="設定"><i data-icon="settings"></i></button>
       </div>
       <div id="filter-summary" class="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2 text-xs text-muted" hidden><span id="filter-label" class="truncate"></span><button id="reset-filter" class="text-accent">解除</button></div>
-      <div id="game-list" class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4" aria-label="ゲーム一覧"></div>
+      <div id="game-list" class="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-3" aria-label="ゲーム一覧"></div>
       <p id="sidebar-empty" class="px-4 py-5 text-sm text-muted" hidden>ゲームが見つかりません。</p>
     </aside>
     </div>
-    <main id="main" class="min-w-0 overflow-y-auto bg-[linear-gradient(120deg,var(--bg),var(--bg-end))]">
+    <main id="main" class="min-w-0 overflow-y-auto bg-canvas">
       <section id="detail-screen"></section>
-      <section id="library-screen" class="p-6" hidden>
-        <div id="game-grid" class="grid grid-cols-4 gap-6 max-[1250px]:grid-cols-3 max-[1050px]:grid-cols-2"></div>
+      <section id="library-screen" class="library-screen" hidden>
+        <div id="game-grid" class="grid grid-cols-4 gap-5 max-[1250px]:grid-cols-3 max-[1050px]:grid-cols-2"></div>
       </section>
-      <div id="empty" class="px-6 py-16 text-center text-muted" hidden><i data-icon="search"></i><p>ゲームが見つかりません。検索条件を変えてみてください。</p></div>
+      <div id="empty" class="px-6 py-16 text-center text-muted" hidden><i data-icon="search"></i><p>ゲームが見つかりません</p></div>
     </main>
   </div>
-  <dialog id="web-modal" class="h-[90vh] max-h-[calc(100vh-60px)]! w-[min(1000px,calc(100vw-64px))]! max-w-none overflow-hidden rounded-lg! border-0! bg-side" aria-labelledby="web-title">
+  <dialog id="web-modal" class="web-dialog" aria-labelledby="web-title">
     <div class="flex h-full flex-col">
-      <header class="flex h-16 shrink-0 items-center gap-4 bg-side px-4">
+      <header class="web-toolbar">
         <h2 id="web-title" class="min-w-0 flex-1 truncate text-[16px] font-medium"></h2>
         <div class="flex items-center gap-2">
-          <div class="mr-2 flex items-center gap-2 border-r border-line pr-4">
+          <div class="volume-control">
             <button id="web-mute" type="button" class="icon-button" aria-label="ミュート" aria-pressed="false"><i data-icon="volume"></i></button>
-            <input id="web-volume" class="h-5 w-28 cursor-pointer accent-accent" type="range" min="0" max="100" step="1" value="100" aria-label="ゲームの音量" aria-valuetext="100%">
+            <input id="web-volume" class="volume-slider" type="range" min="0" max="100" step="1" value="100" aria-label="ゲームの音量" aria-valuetext="100%">
             <output id="web-volume-value" for="web-volume" class="w-10 text-right text-xs tabular-nums text-muted">100%</output>
           </div>
           <button id="web-back" class="icon-button" title="戻る" aria-label="前のページ" hidden><i data-icon="back"></i></button>
@@ -83,43 +85,42 @@
   </dialog>
   <dialog id="settings-dialog" aria-labelledby="settings-title">
     <form id="settings-form" class="flex max-h-[calc(100vh-80px)] flex-col">
-      <div class="modal-heading flex shrink-0 items-center justify-between border-b border-line bg-raised px-6 py-6">
+      <div class="modal-heading flex shrink-0 items-center justify-between border-b border-line px-6 py-5">
         <h2 id="settings-title">設定</h2><button type="button" class="icon-button close-dialog" aria-label="設定を閉じる"><i data-icon="close"></i></button>
       </div>
-      <div class="modal-body min-h-0 space-y-7 overflow-y-auto px-6 py-6">
+      <div class="modal-body settings-body min-h-0 overflow-y-auto px-6">
         <section aria-labelledby="app-update-title">
-          <h3 id="app-update-title" class="mb-4 flex items-center gap-2 text-lg font-semibold"><i class="text-blue-400" data-icon="download"></i>ランチャーの更新</h3>
+          <h3 id="app-update-title" class="settings-heading"><i data-icon="download"></i>アップデート</h3>
           <div class="flex items-center justify-between gap-3"><span id="app-version" class="text-sm text-muted"></span><button id="update-check" type="button" class="secondary text-sm!">更新を確認</button></div>
           <p id="update-status" class="mt-3! mb-0! text-sm leading-relaxed text-muted" role="status" aria-live="polite"></p>
           <progress id="update-progress" class="mt-3 h-1.5 w-full overflow-hidden rounded" max="100" value="0" aria-label="ランチャー更新のダウンロード進捗" hidden></progress>
           <button id="update-install-settings" type="button" class="primary mt-3" hidden>再起動して更新</button>
-          <label class="checkbox mt-4 flex items-center gap-2 text-sm text-muted"><input id="auto-update" class="accent-accent" type="checkbox">起動時と定期的に更新を確認する</label>
-          <p class="mt-2! mb-0! text-xs leading-relaxed text-muted">新しい版を自動でダウンロードし、ゲーム終了後にランチャーを閉じると自動適用します。次回起動から新版になります。「再起動して更新」で今すぐ適用することもできます。</p>
+          <label class="checkbox"><span>自動アップデート</span><input id="auto-update" type="checkbox" title="終了時に適用"></label>
         </section>
         <section>
-          <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold"><i class="text-blue-400" data-icon="globe"></i>リモート設定</h3>
-          <label>ゲームリストURL<input id="catalog-url" type="url" required></label>
-          <label class="checkbox mt-4 flex items-center gap-2 text-sm text-muted"><input id="auto-sync" class="accent-accent" type="checkbox">ゲーム一覧を自動同期（起動時・1分ごと）</label>
+          <h3 class="settings-heading"><i data-icon="globe"></i>ゲーム一覧</h3>
+          <label>カタログURL<input id="catalog-url" type="url" required spellcheck="false"></label>
+          <label class="checkbox"><span>自動同期</span><input id="auto-sync" type="checkbox" title="起動時・1分ごとに同期"></label>
         </section>
         <section>
-          <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold"><i data-icon="folder"></i>ダウンロード設定</h3>
-          <label>ダウンロードフォルダ</label>
+          <h3 class="settings-heading"><i data-icon="folder"></i>ダウンロード</h3>
+          <label for="download-dir">保存先</label>
           <div class="mt-2 flex items-center gap-2">
             <input id="download-dir" class="mt-0! min-w-0" placeholder="デフォルトフォルダを使用" readonly aria-label="ダウンロードフォルダ">
-            <button type="button" id="choose-folder" class="shrink-0 rounded-lg bg-accent px-4 py-3 text-white">選択</button>
+            <button type="button" id="choose-folder" class="secondary shrink-0">変更</button>
             <button type="button" id="default-folder" class="icon-button" aria-label="標準の保存先に戻す" title="標準に戻す"><i data-icon="reset"></i></button>
           </div>
           <button type="button" id="import-legacy" class="text-button mt-2 text-xs">旧ランチャーのゲームを再検出</button>
         </section>
         <section>
-          <h3 class="mb-5 flex items-center gap-2 text-lg font-semibold"><i class="text-violet-400" data-icon="palette"></i>テーマ設定</h3>
-          <label>カラーテーマ<select id="theme"><option value="dark">ダーク</option><option value="light">ライト</option><option value="system">システム設定に従う</option></select></label>
+          <h3 class="settings-heading"><i data-icon="palette"></i>外観</h3>
+          <label>テーマ<select id="theme"><option value="dark">ダーク</option><option value="light">ライト</option><option value="system">システム</option></select></label>
         </section>
         <p id="settings-error" class="m-0! text-sm text-danger" role="alert"></p>
       </div>
-      <div class="flex shrink-0 items-center justify-between gap-4 border-t border-line bg-raised px-6 py-6">
+      <div class="modal-footer flex shrink-0 items-center justify-between gap-4 border-t border-line px-6 py-4">
         <button type="button" id="reset-settings" class="text-button inline-flex items-center gap-2"><i data-icon="reset"></i>リセット</button>
-        <div class="flex gap-4"><button type="button" class="text-button close-dialog">キャンセル</button><button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-3 text-white"><i data-icon="save"></i>保存</button></div>
+        <div class="flex items-center gap-5"><button type="button" class="text-button close-dialog">キャンセル</button><button type="submit" class="primary">保存</button></div>
       </div>
     </form>
   </dialog>

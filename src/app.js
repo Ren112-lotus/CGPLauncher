@@ -28,16 +28,17 @@ function renderAppUpdate() {
   const {status, version, percent, error, currentVersion, lastChecked} = appUpdate;
   const busy = updateBusyReason();
   const messages = {
-    idle: lastChecked ? '最新版を利用しています。' : '更新を確認できます。',
-    checking: '新しいバージョンを確認しています…',
+    idle: lastChecked ? '最新版です' : '',
+    checking: '更新を確認中…',
     downloading: `v${version} をダウンロード中… ${Math.floor(percent)}%`,
-    downloaded: `v${version} の更新準備ができました。`,
-    installing: '更新を適用するため、ランチャーを再起動しています…',
+    downloaded: `v${version} · 更新できます`,
+    installing: '再起動中…',
     error,
-    unsupported: 'この起動方法では自動更新できません。セットアップ版で利用できます。'
+    unsupported: '開発版'
   };
-  $('#app-version').textContent = `現在のバージョン: ${currentVersion}`;
+  $('#app-version').textContent = `v${currentVersion}`;
   $('#update-status').textContent = [messages[status], status === 'downloaded' ? (error || busy) : ''].filter(Boolean).join(' ');
+  $('#update-status').hidden = !$('#update-status').textContent;
   $('#update-check').disabled = ['checking','downloading','downloaded','installing','unsupported'].includes(status);
   $('#update-check').textContent = status === 'error' ? '再試行' : '更新を確認';
   for (const id of ['#update-progress','#update-banner-progress']) {
@@ -49,10 +50,11 @@ function renderAppUpdate() {
     $(id).disabled = !!busy || status === 'installing';
     $(id).title = busy;
   }
-  const showBanner = ['downloading','downloaded','installing'].includes(status) || status === 'error' && !!version;
+  const showBanner = !state.settings.autoUpdate && ['downloaded','installing'].includes(status) || status === 'error' && !!version;
   $('#update-banner').hidden = !showBanner;
   $('#update-banner-title').textContent = messages[status] || '';
-  $('#update-banner-hint').textContent = status === 'downloaded' ? (busy || (state.settings.autoUpdate ? '終了時に自動適用します。次回起動から新版になります。' : '「再起動して更新」で適用できます。')) : status === 'downloading' ? 'ダウンロード中もゲームを利用できます。' : status === 'error' ? '再試行するか、あとで設定から確認できます。' : '';
+  $('#update-banner-hint').textContent = status === 'downloaded' ? busy : '';
+  $('#update-banner-hint').hidden = !$('#update-banner-hint').textContent;
   $('#update-retry').hidden = status !== 'error';
   $('#toasts').classList.toggle('bottom-6', !showBanner);
   $('#toasts').classList.toggle('bottom-52', showBanner);
@@ -96,13 +98,13 @@ document.addEventListener('error', event => {
 function label(g) {
   if (state.running.includes(g.id)) return '実行中';
   if (state.jobs[g.id]) return state.jobs[g.id].stage;
-  if (g.unityroomurl) return 'Unity Room';
+  if (g.unityroomurl) return 'プレイ';
   return state.settings.installed[g.id] ? 'プレイ' : 'ダウンロード';
 }
 function playButton(g) {
   const busy = state.jobs[g.id] || state.running.includes(g.id);
   const installed = state.settings.installed[g.id];
-  return `<button class="${g.unityroomurl ? 'web-button' : 'primary'} ${installed && !g.unityroomurl ? 'installed' : ''}" data-play="${g.id}" ${busy ? 'disabled' : ''}>${icon(g.unityroomurl ? 'external' : installed ? 'play' : 'download')}${esc(label(g))}</button>`;
+  return `<button class="${g.unityroomurl ? 'web-button' : 'primary'} ${installed && !g.unityroomurl ? 'installed' : ''}" data-play="${g.id}" ${busy ? 'disabled' : ''}>${icon(g.unityroomurl || installed ? 'play' : 'download')}${esc(label(g))}</button>`;
 }
 function filtered() {
   const q = query.trim().normalize('NFKC').toLocaleLowerCase();
@@ -124,22 +126,21 @@ function row(g) {
   const running = state.running.includes(g.id);
   return `<button class="game-row" data-detail="${g.id}" aria-current="${g.id === selected}" title="${esc(g.name)}">
     ${image(g)}
-    <span class="min-w-0 flex-1"><span class="block truncate text-[16px] font-semibold">${esc(g.name)}</span>${g.authors.length ? `<span class="mt-1 block truncate text-sm text-muted">${esc(g.authors.join(', '))}</span>` : ''}</span>
+    <span class="min-w-0 flex-1"><span class="game-name">${esc(g.name)}</span>${g.authors.length ? `<span class="game-author">${esc(g.authors.join(', '))}</span>` : ''}</span>
     ${running ? '<span class="absolute top-2 right-2 size-2 rounded-full bg-emerald-400"></span>' : ''}
     ${state.jobs[g.id] ? `<span class="absolute right-3 bottom-1 text-xs text-blue-300">${state.jobs[g.id].percent}%</span>` : ''}
   </button>`;
 }
 function card(g) {
   const d = state.details[g.id], fav = state.settings.favorites.includes(g.id);
-  return `<article class="flex min-w-0 flex-col overflow-hidden rounded-xl border border-input-line bg-raised">
+  return `<article class="game-card">
     <button class="block w-full" data-detail="${g.id}" aria-label="${esc(g.name)}の詳細">${image(g, 'game-cover')}</button>
-    <div class="flex flex-1 flex-col gap-3 p-4">
-      <button class="text-left text-lg font-bold" data-detail="${g.id}">${esc(g.name)}</button>
-      ${g.authors.length ? `<p class="m-0! text-sm text-muted">${esc(g.authors.join(', '))}</p>` : ''}
-      <div class="text-sm text-muted">${g.unityroomurl ? '<span class="rounded-full bg-orange-500/30 px-2 py-1 text-orange-200">Unity Room</span>' : esc(d?.release?.tag_name || 'Windows')}</div>
-      <div class="flex flex-wrap gap-1">${g.tags.map(t => `<button class="tag" data-tag="${esc(t)}">#${esc(t)}</button>`).join('')}</div>
-      ${g.description ? `<p class="m-0! line-clamp-3 text-sm leading-relaxed text-muted">${esc(g.description)}</p>` : ''}
-      <div class="mt-auto flex items-center gap-2 pt-5">${playButton(g)}<button class="icon-button ml-auto aria-pressed:text-violet-400 aria-pressed:[&_svg]:fill-current" data-favorite="${g.id}" aria-label="お気に入り" aria-pressed="${fav}">${icon('heart')}</button></div>
+    <div class="card-body">
+      <button class="card-title" data-detail="${g.id}">${esc(g.name)}</button>
+      ${g.authors.length ? `<p class="m-0! truncate text-xs text-muted">${esc(g.authors.join(', '))}</p>` : ''}
+      <div class="card-platform">${g.unityroomurl ? 'Unity Room' : esc(d?.release?.tag_name || 'Windows')}</div>
+      ${g.tags.length ? `<div class="flex flex-wrap gap-1">${g.tags.map(t => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+      <div class="card-actions">${playButton(g)}<button class="icon-button ml-auto" data-favorite="${g.id}" aria-label="お気に入り" aria-pressed="${fav}">${icon('heart')}</button></div>
     </div>
   </article>`;
 }
@@ -161,31 +162,31 @@ function renderDetail() {
   if (detailKey === key) return;
   detailKey = key;
   $('#detail-screen').innerHTML = `
-    <section class="relative flex h-[320px] items-end overflow-hidden bg-linear-to-br from-blue-600/50 to-violet-600/40">
+    <section class="detail-hero">
       ${g.image ? `<img class="hero-image" src="${esc(g.image)}" alt="" referrerpolicy="no-referrer">` : `<div class="absolute inset-0 flex items-center justify-center text-white/30 [&_svg]:size-24">${icon('game')}</div>`}
-      <div class="pointer-events-none absolute inset-0 bg-linear-to-b from-black/20 via-black/45 to-black/85"></div>
-      <div class="relative z-[1] w-full px-8 pb-8">
-        <h1 class="m-0 mb-3 text-[36px] leading-tight font-bold text-white">${esc(g.name)}</h1>
-        <div class="space-y-3">
-          <div class="hero-meta">${icon('clock')}<span class="${g.unityroomurl ? 'rounded-full bg-orange-700/70 px-3 py-1 text-sm font-medium' : 'text-sm'}">${g.unityroomurl ? 'Unity Room' : 'GitHub' + (release?.tag_name ? ': ' + esc(release.tag_name) : '')}</span></div>
-          ${g.authors.length ? `<div class="hero-meta"><i class="text-cyan-400!">${icon('user')}</i><span>${esc(g.authors.join(', '))}</span></div>` : ''}
-          ${g.tags.length ? `<div class="hero-meta">${icon('tag')}<div class="flex flex-wrap gap-2">${g.tags.map(t => `<button class="tag" data-tag="${esc(t)}">#${esc(t)}</button>`).join('')}</div></div>` : ''}
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">${esc(g.name)}</h1>
+        <div class="hero-meta">
+          <span class="platform-badge">${g.unityroomurl ? 'Unity Room' : 'Windows' + (release?.tag_name ? ' · ' + esc(release.tag_name) : '')}</span>
+          ${g.authors.length ? `<span class="hero-author">${icon('user')}${esc(g.authors.join(', '))}</span>` : ''}
         </div>
+        ${g.tags.length ? `<div class="hero-tags">${g.tags.map(t => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
       </div>
     </section>
-    <div class="flex min-h-[75px] flex-wrap items-center gap-3 border-b border-line bg-[#0f172a] px-6 py-4 in-[[data-theme=light]]:bg-slate-100">
+    <div class="detail-actions">
       ${playButton(g)}
       ${g.githuburl ? `<button class="secondary" data-url="${esc(g.githuburl)}">${icon('external')}GitHub</button>` : ''}
       <div class="ml-auto flex items-center gap-2">
         ${item ? `<button class="icon-button" data-folder="${g.id}" title="ゲームのフォルダを開く" aria-label="ゲームのフォルダを開く">${icon('folder')}</button>` : ''}
-        <button class="icon-button aria-pressed:text-violet-400 aria-pressed:[&_svg]:fill-current" data-favorite="${g.id}" title="お気に入り" aria-label="お気に入り" aria-pressed="${fav}">${icon('heart')}</button>
+        <button class="icon-button" data-favorite="${g.id}" title="お気に入り" aria-label="お気に入り" aria-pressed="${fav}">${icon('heart')}</button>
       </div>
     </div>
     ${job ? `<div class="px-6 pt-5 text-sm text-blue-300">${esc(job.stage)} ${job.percent}%<progress class="mt-2 block h-1.5 w-full overflow-hidden rounded" value="${job.percent}" max="100"></progress><button class="text-button" data-cancel="${g.id}">ダウンロードを中止</button></div>` : ''}
     ${update ? `<p class="notice px-6">新しいバージョン ${esc(release.tag_name)} があります。 <button class="text-button" data-update="${g.id}" ${job || running ? 'disabled' : ''}>更新をダウンロード ↗</button></p>` : ''}
-    ${g.description || g.githuburl ? `<div class="p-6"><section class="rounded-xl border border-input-line bg-raised p-4">
-      <div class="mb-4 flex items-center justify-between"><h2 class="flex items-center gap-2 text-[18px] font-semibold"><i class="text-violet-400">${icon('library')}</i>詳細情報</h2>${g.githuburl ? `<button class="icon-button" data-retry="${g.id}" title="READMEを再読み込み" aria-label="READMEを再読み込み">${icon('refresh')}</button>` : ''}</div>
-      ${g.description ? `<p class="m-0! text-[16px] leading-[1.8] whitespace-pre-line text-muted">${esc(g.description)}</p>` : ''}
+    ${g.description || g.githuburl ? `<div class="detail-info"><section>
+      <div class="detail-info-heading"><h2>ゲーム情報</h2>${g.githuburl ? `<button class="icon-button" data-retry="${g.id}" title="READMEを再読み込み" aria-label="READMEを再読み込み">${icon('refresh')}</button>` : ''}</div>
+      ${g.description ? `<p class="detail-description">${esc(g.description)}</p>` : ''}
       ${g.githuburl ? `<div class="markdown ${g.description ? 'mt-5' : ''}">${d?.readme ? markdown(d.readme, d.base) : `<p class="notice">${loadingDetails.has(g.id) ? 'READMEを読み込んでいます…' : esc(d?.readmeError || '詳細情報を読み込んでいます…')}</p>`}</div>${d?.error ? `<p class="notice">${esc(d.error)}</p>` : ''}` : ''}
     </section></div>` : ''}
   `;
@@ -305,6 +306,7 @@ $('#web-reload').onclick = safe(() => { $('#web-error').hidden = true; return ap
 $('#web-external').onclick = safe(() => api.external(webURL));
 function renderVolume(value) {
   $('#web-volume').value=value;
+  $('#web-volume').style.setProperty('--volume', `${value}%`);
   $('#web-volume-value').textContent=`${Math.round(value)}%`;
   $('#web-volume').setAttribute('aria-valuetext',`${Math.round(value)}%`);
   $('#web-mute').innerHTML=icon(value===0?'volume-off':'volume');

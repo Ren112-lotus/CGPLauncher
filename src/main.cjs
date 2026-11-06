@@ -4,10 +4,12 @@ const {pathToFileURL}=require('node:url');
 const {LauncherService}=require('./core.cjs');
 const {LauncherUpdater}=require('./updater.cjs');
 const {CatalogSynchronizer}=require('./catalog-sync.cjs');
+const {isUnityRoomPage,isUnityRoomGame,resolveWebGame}=require('./web-game.cjs');
 const {autoUpdater}=require('electron-updater');
 const {existsSync}=require('node:fs');
 let window,service,gameView,webGameId,launcherUpdater,catalogSync;
 let pendingGameActions=0;
+let webLoadController,webGameOnly=false,webSourceUrl='';
 let systemEnding=false,skipAutoExitUpdate=false;
 const localPage=pathToFileURL(path.join(__dirname,'index.html')).href;
 if(process.env.CGP_TEST_DATA) app.setPath('userData',process.env.CGP_TEST_DATA);
@@ -73,7 +75,20 @@ app.whenReady().then(async()=>{
     if(!gameView || gameView.webContents.isDestroyed())return;
     window.webContents.send('web-state',{id:webGameId,url:gameView.webContents.getURL(),loading:gameView.webContents.isLoading(),back:gameView.webContents.navigationHistory.canGoBack(),forward:gameView.webContents.navigationHistory.canGoForward()});
   };
-  const closeWeb=()=>{if(gameView){window.contentView.removeChildView(gameView);gameView.webContents.close();gameView=null;webGameId=null;}};
+  const closeWeb=()=>{webLoadController?.abort();webLoadController=null;if(gameView){window.contentView.removeChildView(gameView);gameView.webContents.close();gameView=null;webGameId=null;}};
+  const loadWebGame=()=>{
+    if(!gameView)return;
+    webLoadController?.abort();
+    const controller=new AbortController(),view=gameView,id=webGameId;
+    webLoadController=controller;
+    window.webContents.send('web-state',{id,loading:true});
+    void resolveWebGame(webSourceUrl,{signal:controller.signal}).then(url=>{
+      if(controller.signal.aborted||gameView!==view)return;
+      return view.webContents.loadURL(url);
+    }).catch(error=>{
+      if(!controller.signal.aborted&&gameView===view&&!window.isDestroyed())window.webContents.send('web-state',{id,loading:false,failed:error.message});
+    });
+  };
   const positionWeb=bounds=>{
     if(!gameView)return;
     if(!bounds || !['x','y','width','height'].every(key=>Number.isFinite(bounds[key])))throw Error('WebViewの表示領域が正しくありません。');
@@ -82,13 +97,15 @@ app.whenReady().then(async()=>{
     const y=Math.max(40,Math.min(content.height,Math.round(bounds.y)));
     const width=Math.max(0,Math.min(content.width-x,Math.round(bounds.width)));
     gameView.setBounds({x,y,width,height:Math.max(0,Math.min(content.height-y,Math.round(bounds.height)))});
-    // Unity Roomの960px幅のゲームがモーダル内に収まる倍率。
-    gameView.webContents.setZoomFactor(Math.max(0.4,Math.min(0.7,width/1400)));
+    // The dedicated play page contains/resizes its canvas to the viewport.
+    gameView.webContents.setZoomFactor(webGameOnly?1:Math.max(0.4,Math.min(0.7,width/1400)));
   };
   handle('web-open',async (id,bounds)=>{
     requireNotUpdating();
     const g=service.game(id);if(!g.unityroomurl)throw Error('Web版のURLがありません。');
     closeWeb();webGameId=id;
+    webSourceUrl=g.unityroomurl;
+    webGameOnly=isUnityRoomPage(webSourceUrl)||isUnityRoomGame(webSourceUrl);
     // Subframe preloads are required for Unity Room's cross-origin game frame.
     // The sandbox remains enabled and Node is never exposed to page scripts.
     gameView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,nodeIntegrationInSubFrames:true,sandbox:true,session:gameSession}});
@@ -107,13 +124,13 @@ app.whenReady().then(async()=>{
     for(const event of ['did-start-loading','did-stop-loading','did-navigate','did-navigate-in-page'])gameView.webContents.on(event,webState);
     gameView.webContents.on('did-fail-load',(_event,code,description,url,isMainFrame)=>{if(isMainFrame&&code!==-3)window.webContents.send('web-state',{id,failed:`ページを読み込めませんでした (${code})。`,url});});
     window.contentView.addChildView(gameView);positionWeb(bounds);
-    gameView.webContents.loadURL(g.unityroomurl).catch(()=>{});
+    loadWebGame();
     service.settings.history[id]={lastPlayed:Date.now(),plays:(service.settings.history[id]?.plays || 0)+1};
     await service.save();service.emit();return {id};
   });
   handle('web-bounds',positionWeb);
-  handle('web-control',action=>{if(action==='close'){closeWeb();return;}if(!gameView)return;const wc=gameView.webContents;if(action==='back'&&wc.navigationHistory.canGoBack())wc.navigationHistory.goBack();if(action==='forward'&&wc.navigationHistory.canGoForward())wc.navigationHistory.goForward();if(action==='reload')wc.reload();if(action==='hide')gameView.setVisible(false);if(action==='show')gameView.setVisible(true);});
-  window.on('closed',()=>{if(gameView&&!gameView.webContents.isDestroyed())gameView.webContents.close();gameView=null;});
+  handle('web-control',action=>{if(action==='close'){closeWeb();return;}if(!gameView)return;const wc=gameView.webContents;if(action==='back'&&wc.navigationHistory.canGoBack())wc.navigationHistory.goBack();if(action==='forward'&&wc.navigationHistory.canGoForward())wc.navigationHistory.goForward();if(action==='reload'){if(webGameOnly)loadWebGame();else wc.reload();}if(action==='hide')gameView.setVisible(false);if(action==='show')gameView.setVisible(true);});
+  window.on('closed',()=>{webLoadController?.abort();if(gameView&&!gameView.webContents.isDestroyed())gameView.webContents.close();gameView=null;});
   window.on('focus',()=>catalogSync.automatic());
   for(const event of ['query-session-end','session-end'])window.on(event,()=>{systemEnding=true;launcherUpdater.stop();});
   window.on('close',event=>{
