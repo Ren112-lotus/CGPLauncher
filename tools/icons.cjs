@@ -28,6 +28,7 @@ const names = {
   reset: 'rotate-ccw',
   minimize: 'minus',
   maximize: 'maximize-2',
+  restore: 'minimize-2',
   close: 'x',
   back: 'chevron-left',
   forward: 'chevron-right',

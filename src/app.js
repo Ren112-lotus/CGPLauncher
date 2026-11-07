@@ -16,6 +16,7 @@ const webModal = $('#web-modal');
 let sidebarCollapsed = false;
 let appUpdate = null;
 let webURL = '', previousVolume = 100;
+let webMaximized = false;
 
 function updateBusyReason() {
   if (Object.keys(state?.jobs || {}).length) return 'ゲームのダウンロードが完了すると更新できます。';
@@ -273,8 +274,20 @@ function webBounds() {
   return {x:r.x, y:r.y, width:r.width, height:r.height};
 }
 async function updateBounds() { if (webId && webModal.open) await api.webBounds(webBounds()); }
+function setWebMaximized(maximized) {
+  webMaximized = maximized;
+  webModal.dataset.maximized = String(maximized);
+  const button = $('#web-maximize');
+  const label = maximized ? 'ゲーム画面を元のサイズに戻す' : 'ゲーム画面を最大化';
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.setAttribute('aria-pressed', String(maximized));
+  button.innerHTML = icon(maximized ? 'restore' : 'maximize');
+  return updateBounds();
+}
 async function openWeb(id) {
   if (webId) await closeWeb();
+  await setWebMaximized(false);
   webId = id;
   webURL = game(id).unityroomurl;
   renderVolume(state.settings.webVolume);
@@ -286,7 +299,7 @@ async function openWeb(id) {
   try { await api.webOpen(id, webBounds()); await updateBounds(); }
   catch (error) { webId = null; webModal.close(); throw error; }
 }
-async function closeWeb() { await api.webControl('close'); webId = null; if (webModal.open) webModal.close(); renderAppUpdate(); }
+async function closeWeb() { await api.webControl('close'); webId = null; if (webModal.open) webModal.close(); await setWebMaximized(false); renderAppUpdate(); }
 new ResizeObserver(() => { if (webId) updateBounds(); }).observe($('#web-host'));
 window.addEventListener('resize', () => { if (webId) updateBounds(); });
 webModal.addEventListener('cancel', event => { event.preventDefault(); safe(closeWeb)(); });
@@ -300,6 +313,7 @@ api.onWebState(s => {
   updateBounds();
 });
 $('#web-exit').onclick = safe(closeWeb);
+$('#web-maximize').onclick = safe(() => setWebMaximized(!webMaximized));
 $('#web-back').onclick = safe(() => api.webControl('back'));
 $('#web-forward').onclick = safe(() => api.webControl('forward'));
 $('#web-reload').onclick = safe(() => { $('#web-error').hidden = true; return api.webControl('reload'); });

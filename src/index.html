@@ -52,7 +52,7 @@
       <div id="empty" class="px-6 py-16 text-center text-muted" hidden><i data-icon="search"></i><p>ゲームが見つかりません</p></div>
     </main>
   </div>
-  <dialog id="web-modal" class="web-dialog" aria-labelledby="web-title">
+  <dialog id="web-modal" class="web-dialog" data-maximized="false" aria-labelledby="web-title">
     <div class="flex h-full flex-col">
       <header class="web-toolbar">
         <h2 id="web-title" class="min-w-0 flex-1 truncate text-[16px] font-medium"></h2>
@@ -66,6 +66,7 @@
           <button id="web-forward" class="icon-button" title="進む" aria-label="次のページ" hidden><i data-icon="forward"></i></button>
           <button id="web-reload" class="icon-button" title="再読み込み" aria-label="ページを再読み込み"><i data-icon="refresh"></i></button>
           <button id="web-external" class="icon-button" title="ブラウザで開く" aria-label="ブラウザで開く"><i data-icon="external"></i></button>
+          <button id="web-maximize" type="button" class="icon-button" title="ゲーム画面を最大化" aria-label="ゲーム画面を最大化" aria-pressed="false" aria-controls="web-modal"><i data-icon="maximize"></i></button>
           <button id="web-exit" class="icon-button" title="閉じる" aria-label="ゲーム画面を閉じる"><i data-icon="close"></i></button>
         </div>
       </header>

@@ -72,7 +72,7 @@
     "description": "",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/ore-no-summervacation",
-    "image": ""
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/ad69cd7a-1458-44ab-8a29-7a1307cebadd.png"
   },
   {
     "id": "0dbc26259e864dc4",
@@ -82,7 +82,7 @@
     "description": "",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/flip9",
-    "image": ""
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/916a2ab5-7a69-4411-bd4a-aa38c9142d75.png"
   },
   {
     "id": "bb647d55f54be56b",
@@ -163,7 +163,7 @@
     "description": "",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/moaiotoshi",
-    "image": "https://tadaup.jp/9NWciRm6.png"
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/c957cb9b-d677-405d-aa6b-2a61a0e20f92.png"
   },
   {
     "id": "b3959418d455670a",
@@ -191,7 +191,7 @@
     "description": "",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/ricochet_shooting",
-    "image": ""
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/2ab1dd39-66f8-4396-9415-9dc0e45bfabf.png"
   },
   {
     "id": "d443f8d900012da2",
@@ -244,7 +244,7 @@
     "description": "社畜が会社を破壊するゲームです",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/taikinexplosion_team-2023_a",
-    "image": "https://gck-prod-uploads.s3.ap-northeast-1.amazonaws.com/thumbnails/9a927084-fa13-4606-9997-2f0aa0148218.png"
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/291ed0c3-34af-4448-a6d6-78051d2bf0fa.png"
   },
   {
     "id": "1fba5126cd3efc2d",
@@ -307,7 +307,7 @@
     "description": "",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/taigakurta",
-    "image": "https://cgp-catalog.renren112.chatgpt.site/media/3de6f2e0-4ec1-4ef9-9a13-b6f83306fe61.png"
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/acc7f036-23f9-4ab9-906c-4af731f2c47c.png"
   },
   {
     "id": "1a4ae782984046e4",
@@ -319,7 +319,7 @@
     "description": "ストーリー2D横スクロールゲームです。\n魔法を集めて夢から覚めよう！",
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/kimi_gameza",
-    "image": "https://cgp-catalog.renren112.chatgpt.site/media/a700dc3f-1096-4ffd-a6da-ca1588d04f74.png"
+    "image": "https://cgp-catalog.renren112.chatgpt.site/media/9cebbfa1-faa2-47f5-98c7-f4b2760726e6.png"
   },
   {
     "id": "268448479b5f4d36",
@@ -335,5 +335,17 @@
     "githuburl": "",
     "unityroomurl": "https://unityroom.com/games/blendtrails",
     "image": "https://cgp-catalog.renren112.chatgpt.site/media/37f2d971-4103-4d08-a2f2-6b9b6ba98642.png"
+  },
+  {
+    "id": "24c3ad20ae564344",
+    "name": "ゴミ箱タンク",
+    "authors": [],
+    "tags": [
+      "#夏チーム_2026"
+    ],
+    "description": "ゴミ箱の戦車でサクッと街を汚すゲーム",
+    "githuburl": "",
+    "unityroomurl": "https://unityroom.com/games/gomibakotannku",
+    "image": "https://os-worker.unityroom.com/unityroom_production/icon/360694/icon_20261106_215718.png?h=1793969838"
   }
 ]

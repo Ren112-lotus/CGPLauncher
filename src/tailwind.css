@@ -190,6 +190,7 @@
   .checkbox input:checked::after { content: ''; @apply absolute top-[2px] left-[5px] h-[9px] w-[5px] rotate-45 border-r-2 border-b-2 border-accent-ink; }
   .modal-footer { @apply bg-side/30; }
   .web-dialog { @apply h-[90vh] max-h-[calc(100vh-60px)] w-[min(1000px,calc(100vw-64px))] max-w-none overflow-hidden rounded-none border border-input-line bg-side; }
+  .web-dialog[data-maximized='true'] { @apply fixed inset-x-0 top-10 bottom-0 m-0 h-[calc(100vh-40px)] max-h-none w-full border-0; }
   .web-toolbar { @apply flex h-[60px] shrink-0 items-center gap-4 border-b border-line bg-panel px-4; }
   .web-toolbar h2 { @apply text-sm font-medium; }
   .volume-control { @apply mr-1 flex items-center gap-2 border-r border-line pr-4; }

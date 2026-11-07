@@ -6,7 +6,7 @@
 ## ダウンロード・起動
 
 [最新版のリリース](https://github.com/Ren112-lotus/CGPLauncher/releases/latest) から
-`CGP-Launcher-Rebuilt-Setup-1.4.2-x64.exe` をダウンロードしてインストールしてください。
+`CGP-Launcher-Rebuilt-Setup-1.5.0-x64.exe` をダウンロードしてインストールしてください。
 ランチャー本体にPythonは不要です。
 
 v1.0.3以前のZIP版には更新機能がないため、最初の一度だけセットアップ版を
@@ -51,7 +51,7 @@ Windowsのタイトルバーをドラッグするための `app-drag` / `app-no-
 
 UIアイコンは [Lucide](https://lucide.dev/guide/static) のSVGを使用しています。
 `tools/icons.cjs` の対応表を編集し、`npm run icons:build` で `src/icons.js` と
-`assets/icons/` を再生成します。使用する31種類のみを同梱し、実行時のCDN接続は不要です。
+`assets/icons/` を再生成します。使用する32種類のみを同梱し、実行時のCDN接続は不要です。
 元のSVGとISC／Feather MITライセンスは `assets/icons/` にあります。
 
 ```sh
@@ -81,6 +81,7 @@ CSSはアプリに同梱され、実行時のCDNやTailwindランタイムは不
 - Unity Roomのゲーム本体だけを中央のモーダルに表示。投稿ページの広告・コメント・ナビゲーションは読み込みません
 - 起動・再読み込みのたびに公開ページの署名付きプレイURLを取得し、期限切れURLを保存しません。ブラウザで開く操作は元の作品ページを開きます
 - モーダル上部の音量スライダー（0〜100%）とミュート。設定を次回も保持し、ゲーム内のWebAudioと音声・動画に反映
+- モーダル右上の最大化ボタンで、タイトルバーを残してゲーム画面をランチャー内いっぱいに表示。同じボタンで通常サイズに戻し、ゲームのプレイ状態を維持
 - WebViewは右上の×、またはWebView内で Ctrl+W を押して閉じる
 - GitHub ReleasesのZIP取得、展開、実行ファイル選択、起動状態表示
 - GitHub README表示、外部ブラウザで開く
