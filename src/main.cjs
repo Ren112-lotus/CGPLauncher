@@ -42,7 +42,7 @@ app.whenReady().then(async()=>{
     prepareInstall:()=>service.save(),
     onChange:state=>window&&!window.isDestroyed()&&window.webContents.send('app-update',state)
   });
-  window=new BrowserWindow({width:1400,height:900,minWidth:1000,minHeight:700,frame:false,roundedCorners:false,show:false,title:'CGP Launcher Rebuilt',backgroundColor:'#15191f',icon:path.join(__dirname,'../assets/logo.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  window=new BrowserWindow({width:1400,height:900,minWidth:1000,minHeight:700,frame:false,roundedCorners:false,show:false,title:'CGP Launcher Rebuilt',backgroundColor:'#151617',icon:path.join(__dirname,'../assets/logo.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   window.webContents.on('will-navigate',(event,url)=>{if(url!==localPage)event.preventDefault();});
   window.webContents.session.setPermissionRequestHandler((_w,_p,callback)=>callback(false));
@@ -110,7 +110,7 @@ app.whenReady().then(async()=>{
     // The sandbox remains enabled and Node is never exposed to page scripts.
     gameView=new WebContentsView({webPreferences:{contextIsolation:true,nodeIntegration:false,nodeIntegrationInSubFrames:true,sandbox:true,session:gameSession}});
     gameView.webContents.setAudioMuted(service.settings.webVolume===0);
-    gameView.setBackgroundColor('#10151d');
+    gameView.setBackgroundColor('#101112');
     gameView.webContents.session.setPermissionRequestHandler((_w,_p,cb)=>cb(false));
     gameView.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     gameView.webContents.on('will-navigate',(e,url)=>{if(!url.startsWith('https://'))e.preventDefault();});

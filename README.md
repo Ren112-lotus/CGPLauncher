@@ -6,7 +6,7 @@
 ## ダウンロード・起動
 
 [最新版のリリース](https://github.com/Ren112-lotus/CGPLauncher/releases/latest) から
-`CGP-Launcher-Rebuilt-Setup-1.5.0-x64.exe` をダウンロードしてインストールしてください。
+`CGP-Launcher-Rebuilt-Setup-1.6.0-x64.exe` をダウンロードしてインストールしてください。
 ランチャー本体にPythonは不要です。
 
 v1.0.3以前のZIP版には更新機能がないため、最初の一度だけセットアップ版を
@@ -68,6 +68,8 @@ npm run verify:release # インストーラー・更新ファイル・チェッ�
 走査対象は `@source` でこのHTMLとJavaScriptに限定しています。
 クラス名を追加するときは `bg-${color}` のような組み立てを避け、完全なクラス名を記述してください。
 CSSはアプリに同梱され、実行時のCDNやTailwindランタイムは不要です。
+
+UIの監査と調整には [unslop](https://github.com/heydamir/unslop)（Damir Sokolovsky、CC BY 4.0）を使用しています。角丸なしの方針を保ち、作品画像を中心に、管理画面と色・文字・選択表示を揃えています。
 
 ## 機能
 
